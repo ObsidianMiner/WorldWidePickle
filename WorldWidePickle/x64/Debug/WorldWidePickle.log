@@ -1,0 +1,12 @@
+﻿  DOM.cpp
+  DOMRender.cpp
+  Tab.cpp
+C:\Users\JGEle\source\repos\WorldWidePickle\src\Tab.cpp(24,29): warning C4244: '=': conversion from '_Rep' to 'unsigned int', possible loss of data
+C:\Users\JGEle\source\repos\WorldWidePickle\src\Tab.cpp(24,29): warning C4244:         with
+C:\Users\JGEle\source\repos\WorldWidePickle\src\Tab.cpp(24,29): warning C4244:         [
+C:\Users\JGEle\source\repos\WorldWidePickle\src\Tab.cpp(24,29): warning C4244:             _Rep=__int64
+C:\Users\JGEle\source\repos\WorldWidePickle\src\Tab.cpp(24,29): warning C4244:         ]
+  Website.cpp
+  WorldWidePickle.cpp
+  Generating Code...
+  WorldWidePickle.vcxproj -> C:\Users\JGEle\source\repos\WorldWidePickle\x64\Debug\WorldWidePickle.exe
