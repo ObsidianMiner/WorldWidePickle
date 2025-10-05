@@ -4,6 +4,10 @@
 #include "../imgui/imgui.h"
 #include <iostream>
 
+std::vector<Tab> tabs;
+int maxTabID = 0;
+char tryNewTabBuffer[256];
+Tab* renderingTab;
 
 void validateURL(char* urlBuffer, size_t bufferSize)
 {
@@ -15,47 +19,58 @@ void validateURL(char* urlBuffer, size_t bufferSize)
         urlBuffer[bufferSize - 1] = '\0'; // Ensure null-termination
     }
 }
-Tab::Tab(std::string url, unsigned int id)
+Tab::Tab(std::string url)
 {
     strncpy_s(urlBuffer, url.c_str(), sizeof(urlBuffer) - 1);
+    currentURL = urlBuffer;
     currentPage = std::make_unique<Website>(urlBuffer);
     auto current_time = std::chrono::high_resolution_clock::now();
-    auto elapsed_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(current_time.time_since_epoch()).count();
-    if (id == 0) this->id = elapsed_milliseconds;
-    else this->id = id;
+    maxTabID++;
+    this->id = maxTabID;
     char name[256];
     std::snprintf(name, sizeof(name), "Tab##%d", this->id);
     viewingSource = false;
     waitingToClose = false;
+    attemptingToLoadNewPage = false;
 }
 void Tab::Render()
 {
+    renderingTab = this;
     char name[256];
     std::snprintf(name, sizeof(name), "Tab##%d", id);
-    ImGui::Begin(name);                          // Create a window called "Hello, world!" and append into it.
+    ImGui::Begin(name);
 
-    //ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-    //ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-
-    //ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    //ImGui::ColorEdit3("clear color", (float*)&PGUI::clear_color); // Edit 3 floats representing a color
+    if (urlHistory.size() > 0 && ImGui::Button("Back"))
+    {
+        currentURL = urlHistory[urlHistory.size() - 1];
+        urlHistory.pop_back();
+        strncpy_s(urlBuffer, currentURL.c_str(), sizeof(urlBuffer) - 1);
+        currentPage = std::make_unique<Website>(urlBuffer);
+    }
+    ImGui::SameLine();
     if (ImGui::InputText("URL", urlBuffer, IM_ARRAYSIZE(urlBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
     {
         validateURL(urlBuffer, sizeof(urlBuffer));
-        currentPage = std::make_unique<Website>(urlBuffer);
+        attemptingToLoadNewPage = true;
     }
     ImGui::SameLine();
     if (ImGui::Button("Get Page"))
     {
         validateURL(urlBuffer, sizeof(urlBuffer));
+        attemptingToLoadNewPage = true;
+    }
+    if (attemptingToLoadNewPage)
+    {
+        urlHistory.push_back(currentURL);
+        currentURL = urlBuffer;
         currentPage = std::make_unique<Website>(urlBuffer);
+        attemptingToLoadNewPage = false;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Close Tab"))
-    {
-        waitingToClose = true;
-    }
+    if (ImGui::Button("Close Tab")) waitingToClose = true;
+
     if (ImGui::IsKeyPressed(ImGuiKey_S, false) && ImGui::IsWindowFocused()) viewingSource = !viewingSource;
+
     if (viewingSource)
     {
         std::string* currentDisplayText = PGUI::io->KeyAlt ? &currentPage->content : &currentPage->rawTextVersion;
@@ -76,4 +91,12 @@ void Tab::Render()
         }
     }
     ImGui::End();
+    renderingTab = nullptr;
+}
+
+void Tab::SwitchPage(std::string url)
+{
+    strncpy_s(urlBuffer, url.c_str(), sizeof(urlBuffer) - 1);
+    //validateURL(urlBuffer, sizeof(urlBuffer));
+    attemptingToLoadNewPage = true;
 }

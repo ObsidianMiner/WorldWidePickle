@@ -40,3 +40,9 @@
 # debug information files
 *.dwo
 /.vs/WorldWidePickle
+
+*.log
+*.pdb
+*.ipdb
+*.iobj
+*.tlog

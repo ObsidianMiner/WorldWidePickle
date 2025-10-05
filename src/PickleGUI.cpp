@@ -84,8 +84,11 @@ PGUI::PGUI()
     // - Read 'docs/FONTS.md' for more instructions and details. If you like the default font but want it to scale better, consider using the 'ProggyVector' from the same author!
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //style.FontSizeBase = 20.0f;
-    //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf");
+    
+    io->Fonts->AddFontDefault();
+    ImFont* font = io->Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf");
+    IM_ASSERT(font != nullptr);
+    io->FontDefault = font;
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf");
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf");
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf");
@@ -203,7 +206,7 @@ void SetupDockingLayout(ImGuiID dockspace_id)
     ImGuiID dock_id_top;
     ImGuiID dock_id_bottom;
 
-    ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.065f, &dock_id_top, &dock_id_bottom);
+    ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.085f, &dock_id_top, &dock_id_bottom);
     // 0.1f means 10% height for top
 
     // Dock windows

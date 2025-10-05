@@ -56,7 +56,8 @@ Website::Website(std::string url)
 	this->url = url;
     content = "Loading...";
 	rawTextVersion = "Loading...";
-	std::thread(&Website::fetchContent, this).detach();
+    fetchContent();
+	//std::thread(&Website::fetchContent, this).detach();
 }
 
 Website::~Website()
@@ -69,6 +70,7 @@ void Website::fetchContent()
     std::cout << "Fetching URL:" << url << std::endl;
     content = getWebsite(url);
 	CreateRawTextVersion();
+    std::cout << "Fetched HTML" << std::endl << content << std::endl;
 	nodes = ParseNodes(content);
 	loaded = true;
 	std::cout << "Finished fetching URL:" << url << std::endl;
@@ -154,6 +156,7 @@ void Website::CreateRawTextVersion()
 {
 	content = tidyFormat(content);
     content = removeHtmlComments(content);
+    content = removeDoctype(content);
     rawTextVersion = content;
     rawTextVersion = stripHiddenTags(rawTextVersion);
     rawTextVersion = removeOuterHtmlTag(rawTextVersion);

@@ -119,7 +119,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -144,6 +145,7 @@
     <ClCompile Include="src\DOMRender.cpp" />
     <ClCompile Include="src\PickleGUI.cpp" />
     <ClCompile Include="src\Tab.cpp" />
+    <ClCompile Include="src\Topbar.cpp" />
     <ClCompile Include="src\Website.cpp" />
     <ClCompile Include="src\WorldWidePickle.cpp" />
   </ItemGroup>
@@ -159,7 +161,9 @@
     <ClInclude Include="src\DOM.h" />
     <ClInclude Include="src\PickleGUI.h" />
     <ClInclude Include="src\Tab.h" />
+    <ClInclude Include="src\Topbar.h" />
     <ClInclude Include="src\Website.h" />
+    <ClInclude Include="src\WWP.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -4,7 +4,23 @@
 #include <tuple>
 #include <unordered_map>
 
+using namespace std;
 
+inline void AddAttributeOrType(Node* buildingNode, string htmlContent, int buildingNodeStart, int pointer, bool& readingAttribute)
+{
+    if (readingAttribute)
+    {
+        int startChar = buildingNodeStart + 1 + buildingNode->type.size();
+        string attributePortion = htmlContent.substr(startChar, pointer - startChar - 1);
+        int equalIndex = attributePortion.find('=');
+        buildingNode->attributes.emplace(attributePortion.substr(1, equalIndex - 1), attributePortion.substr(equalIndex + 2));
+    }
+    else
+    {
+        buildingNode->type = htmlContent.substr(buildingNodeStart + 1, pointer - buildingNodeStart - 1);
+        readingAttribute = true;
+    }
+}
 
 std::vector<Node> ParseNodes(const std::string& htmlContent)
 {
@@ -16,12 +32,13 @@ std::vector<Node> ParseNodes(const std::string& htmlContent)
 	std::vector<Node> rootNodes;
     Node* currentContext = nullptr;
 	Node* buildingNode = nullptr;
-    std::unordered_map<Node*, int> nodeStartPositions;
-    std::unordered_map<Node*, int> nodeClosePositions;
+    int lastStartTagPos;
+    int lastEndTagPos;
+    //std::unordered_map<Node*, int> nodeStartPositions;
+    //std::unordered_map<Node*, int> nodeClosePositions;
 
     while (pointer < htmlContent.length())
     {
-        pointer++;
         if (htmlContent[pointer] == '<')
         {
 			insideTag = true;
@@ -36,32 +53,20 @@ std::vector<Node> ParseNodes(const std::string& htmlContent)
             {
                 currentContext->children.emplace_back();
                 buildingNode = &currentContext->children[currentContext->children.size() - 1];
-                nodeStartPositions.emplace(buildingNode, pointer);
+                //nodeStartPositions.emplace(buildingNode, pointer);
+                lastStartTagPos = pointer;
             }
             buildingNode->parent = currentContext;
             currentContext = buildingNode;
         }
         else if (htmlContent[pointer] == ' ' && insideTag)
         {
-            if (readingAttribute)
-            {
-                //Attributes
-            }
-            else
-            {
-				buildingNode->type = htmlContent.substr(buildingNodeStart + 1, pointer - buildingNodeStart - 1);
-                readingAttribute = true;
-            }
+            AddAttributeOrType(buildingNode, htmlContent, buildingNodeStart, pointer, readingAttribute);
         }
         else if (htmlContent[pointer] == '>' && buildingNode != nullptr)
         {
             //End tag
-            nodeClosePositions.emplace(buildingNode, pointer);
-            if (!readingAttribute)
-            {
-                buildingNode->type = htmlContent.substr(buildingNodeStart + 1, pointer - buildingNodeStart - 1);
-                readingAttribute = true;
-            }
+            AddAttributeOrType(buildingNode, htmlContent, buildingNodeStart, pointer, readingAttribute);
             if(buildingNode->type[0] == '/')
             {
                 buildingNode->type = buildingNode->type.substr(1);
@@ -86,8 +91,10 @@ std::vector<Node> ParseNodes(const std::string& htmlContent)
                         
                         if (parents[i]->children.size() == 0)
                         {
-                            parents[i]->innerText = htmlContent.substr(nodeClosePositions[parents[i]] + 1, nodeStartPositions[buildingNode] - (nodeClosePositions[parents[i]] + 1));
+                            parents[i]->innerText = htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1));
+#ifdef ParseDebug
                             std::cout << parents[i]->innerText << std::endl;
+#endif
                         }
 
                         currentContext = parents[i]->parent;
@@ -107,16 +114,21 @@ std::vector<Node> ParseNodes(const std::string& htmlContent)
                 std::cout << std::string(parents.size(), ' ') << "Parsed node: " << buildingNode->type << std::endl;
 #endif
             }
+            lastEndTagPos = pointer;
 #ifdef ParseDebug
             PrintDOM(rootNodes);
 #endif
 			insideTag = false;
         }
+
+        pointer++;
     }
 	std::cout << "Finished parsing nodes." << std::endl;
     PrintDOM(rootNodes);
     return rootNodes;
 }
+
+
 
 
 std::vector<Node*> Node::GetParents()
@@ -130,9 +142,22 @@ std::vector<Node*> Node::GetParents()
     }
     return parents;
 }
+string AttributesToString(const unordered_map<string, string> attributes)
+{
+    //if (attributes.size() == 0) return "No Attributes";
+    string result;
+    for(const pair<string, string>& attribute : attributes)
+    {
+        string value = attribute.second;
+        if (attribute.second.size() > 40) value = attribute.second.substr(0, 37) + "...";
+        result += attribute.first + "=" + value + " ";
+    }
+    return result;
+}
 void PrintNode(Node* node, int indent)
 {
-    std::cout << std::string(indent, ' ') << node->type << std::endl;
+
+    std::cout << std::string(indent, ' ') << node->type << AttributesToString(node->attributes) << std::endl;
     for (size_t i = 0; i < node->children.size(); i++)
     {
         PrintNode(&node->children[i], indent + 1);
@@ -144,4 +169,12 @@ void PrintDOM(std::vector<Node> children)
     {
         PrintNode(&children[i], 0);
     }
+}
+bool operator==(const Node& node1, const Node& node2)
+{
+    return node1.type == node2.type && node1.attributes == node2.attributes && node1.innerText == node2.innerText && node1.children.size() == node2.children.size();
+}
+bool operator==(const Attribute& att1, const Attribute& att2)
+{
+	return att1.name == att2.name && att1.value == att2.value;
 }
