@@ -6,14 +6,17 @@
 
 using namespace std;
 
-inline void AddAttributeOrType(Node* buildingNode, string htmlContent, int buildingNodeStart, int pointer, bool& readingAttribute)
+inline void DOMBuilder::AddAttributeOrType()
 {
     if (readingAttribute)
     {
         int startChar = buildingNodeStart + 1 + buildingNode->type.size();
         string attributePortion = htmlContent.substr(startChar, pointer - startChar - 1);
         int equalIndex = attributePortion.find('=');
-        buildingNode->attributes.emplace(attributePortion.substr(1, equalIndex - 1), attributePortion.substr(equalIndex + 2));
+        if (equalIndex != -1)
+        {
+            buildingNode->attributes.emplace(attributePortion.substr(1, equalIndex - 1), attributePortion.substr(equalIndex + 2));
+        }
     }
     else
     {
@@ -21,111 +24,121 @@ inline void AddAttributeOrType(Node* buildingNode, string htmlContent, int build
         readingAttribute = true;
     }
 }
-
-std::vector<Node> ParseNodes(const std::string& htmlContent)
+inline void DOMBuilder::StartTag()
 {
-    int pointer = 0;
-	int buildingNodeStart = 0;
-	bool insideTag = false;
-	bool inClosingTag = false;
-	bool readingAttribute = false;
-	std::vector<Node> rootNodes;
-    Node* currentContext = nullptr;
-	Node* buildingNode = nullptr;
-    int lastStartTagPos;
-    int lastEndTagPos;
-    //std::unordered_map<Node*, int> nodeStartPositions;
-    //std::unordered_map<Node*, int> nodeClosePositions;
+    insideTag = true;
+    readingAttribute = false;
+    buildingNodeStart = pointer;
+    if (currentContext == nullptr)
+    {
+        rootNodes.emplace_back();
+        buildingNode = &rootNodes[rootNodes.size() - 1];
+    }
+    else
+    {
+        currentContext->children.emplace_back();
+        buildingNode = &currentContext->children[currentContext->children.size() - 1];
+        lastStartTagPos = pointer;
+    }
+    buildingNode->parent = currentContext;
+    currentContext = buildingNode;
+}
+std::string trim(const std::string& str) {
+    auto is_not_space = [](unsigned char ch) {
+        return !std::isspace(ch);
+        };
 
+    auto begin = std::find_if(str.begin(), str.end(), is_not_space);
+    if (begin == str.end()) return ""; // All whitespace
+
+    auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
+    return std::string(begin, end);
+}
+inline void DOMBuilder::EndTag()
+{
+    AddAttributeOrType();
+    if (buildingNode->type[0] == '/')
+    {
+        buildingNode->type = buildingNode->type.substr(1);
+        std::vector<Node*> parents = buildingNode->GetParents();
+#ifdef ParseDebug
+        std::cout << std::string(parents.size() - 1, ' ') << "Closed node: " << buildingNode->type << std::endl;
+#endif
+        bool completedNode = false;
+        for (size_t i = 0; i < parents.size(); i++)
+        {
+            if (parents[i]->type == buildingNode->type)
+            {
+                //Remove the closing tag from becoming a child
+                parents[i]->children.erase(
+                    std::remove_if(parents[i]->children.begin(), parents[i]->children.end(),
+                        [this](const Node& obj) {
+                            return &obj == this->buildingNode;
+                        }),
+                    parents[i]->children.end()
+                );
+
+
+                if (parents[i]->children.size() == 0)
+                {
+                    parents[i]->innerText = htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1));
+					parents[i]->innerText = trim(parents[i]->innerText);
+#ifdef ParseDebug
+                    std::cout << parents[i]->innerText << std::endl;
+#endif
+                }
+
+                currentContext = parents[i]->parent;
+                completedNode = true;
+                break;
+            }
+        }
+        if (!completedNode)
+        {
+            std::cout << "Could not properly close node: " << buildingNode->type << std::endl;
+        }
+    }
+    else
+    {
+        std::vector<Node*> parents = buildingNode->GetParents();
+#ifdef ParseDebug
+        std::cout << std::string(parents.size(), ' ') << "Parsed node: " << buildingNode->type << std::endl;
+#endif
+    }
+    lastEndTagPos = pointer;
+#ifdef ParseDebug
+    PrintDOM(rootNodes);
+#endif
+    insideTag = false;
+}
+std::vector<Node> DOMBuilder::ParseNodes()
+{
     while (pointer < htmlContent.length())
     {
         if (htmlContent[pointer] == '<')
         {
-			insideTag = true;
-            readingAttribute = false;
-            buildingNodeStart = pointer;
-            if (currentContext == nullptr)
-            {
-                rootNodes.emplace_back();
-                buildingNode = &rootNodes[rootNodes.size() - 1];
-            }
-            else
-            {
-                currentContext->children.emplace_back();
-                buildingNode = &currentContext->children[currentContext->children.size() - 1];
-                //nodeStartPositions.emplace(buildingNode, pointer);
-                lastStartTagPos = pointer;
-            }
-            buildingNode->parent = currentContext;
-            currentContext = buildingNode;
+            StartTag();
         }
         else if (htmlContent[pointer] == ' ' && insideTag)
         {
-            AddAttributeOrType(buildingNode, htmlContent, buildingNodeStart, pointer, readingAttribute);
+            AddAttributeOrType();
         }
         else if (htmlContent[pointer] == '>' && buildingNode != nullptr)
         {
-            //End tag
-            AddAttributeOrType(buildingNode, htmlContent, buildingNodeStart, pointer, readingAttribute);
-            if(buildingNode->type[0] == '/')
-            {
-                buildingNode->type = buildingNode->type.substr(1);
-                std::vector<Node*> parents = buildingNode->GetParents();
-#ifdef ParseDebug
-                std::cout << std::string(parents.size() - 1, ' ') << "Closed node: " << buildingNode->type << std::endl;
-#endif
-                bool completedNode = false;
-                for (size_t i = 0; i < parents.size(); i++)
-                {
-                    if (parents[i]->type == buildingNode->type)
-                    {
-                        //Remove the closing tag from becoming a child
-                        parents[i]->children.erase(
-                            std::remove_if(parents[i]->children.begin(), parents[i]->children.end(),
-                                [buildingNode](const Node& obj) {
-                                    return &obj == buildingNode;
-                                }),
-                            parents[i]->children.end()
-                        );
-                        
-                        
-                        if (parents[i]->children.size() == 0)
-                        {
-                            parents[i]->innerText = htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1));
-#ifdef ParseDebug
-                            std::cout << parents[i]->innerText << std::endl;
-#endif
-                        }
-
-                        currentContext = parents[i]->parent;
-                        completedNode = true;
-                        break;
-                    }
-                }
-                if (!completedNode)
-                {
-                    std::cout << "Could not properly close node: " << buildingNode->type << std::endl;
-                }
-			}
-            else
-            {
-                std::vector<Node*> parents = buildingNode->GetParents();
-#ifdef ParseDebug
-                std::cout << std::string(parents.size(), ' ') << "Parsed node: " << buildingNode->type << std::endl;
-#endif
-            }
-            lastEndTagPos = pointer;
-#ifdef ParseDebug
-            PrintDOM(rootNodes);
-#endif
-			insideTag = false;
+            EndTag();
         }
 
         pointer++;
     }
-	std::cout << "Finished parsing nodes." << std::endl;
+    std::cout << "Finished parsing nodes." << std::endl;
     PrintDOM(rootNodes);
     return rootNodes;
+}
+
+std::vector<Node> ParseNodes(const string& htmlContent)
+{
+    DOMBuilder builder = DOMBuilder(htmlContent);
+    return builder.ParseNodes();
 }
 
 

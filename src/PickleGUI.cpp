@@ -10,6 +10,7 @@ UINT PGUI::resizeWidth = 0;
 UINT PGUI::resizeHeight = 0;
 bool PGUI::swapChainIncluded = false;
 bool PGUI::firstFrame = true;
+bool PGUI::minimized = false;
 ID3D10Device* PGUI::pd3dDevice = nullptr;
 ID3D10RenderTargetView* PGUI::mainRenderTargetView = nullptr;
 IDXGISwapChain* PGUI::swapChain = nullptr;
@@ -130,6 +131,7 @@ bool PGUI::CreateDeviceD3D(HWND hWnd)
 bool PGUI::HandleWindow()
 {
     bool done = false;
+    minimized = false;
     // Poll and handle messages (inputs, window resize, etc.)
         // See the WndProc() function below for our to dispatch events to the Win32 backend.
     MSG msg;
@@ -149,6 +151,7 @@ bool PGUI::HandleWindow()
     if (swapChainIncluded && swapChain->Present(0, DXGI_PRESENT_TEST) == DXGI_STATUS_OCCLUDED)
     {
         ::Sleep(10);
+        minimized = true;
         return done;
     }
     swapChainIncluded = false;

@@ -17,6 +17,7 @@ public:
 	static UINT resizeWidth, resizeHeight;
 	static bool swapChainIncluded;
 	static bool firstFrame;
+	static bool minimized;
 	static IDXGISwapChain* swapChain;
 	static ID3D10Device* pd3dDevice;
 	static ID3D10RenderTargetView* mainRenderTargetView;

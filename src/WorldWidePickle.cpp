@@ -29,6 +29,7 @@ int main(int, char**)
 {
 
     PGUI::PGUI();
+    ImGui::StyleColorsDark();
 
     // Our state
     bool show_demo_window = true;
@@ -43,11 +44,9 @@ int main(int, char**)
     {
         done = PGUI::HandleWindow();
         if (done) break;
+        if (PGUI::minimized) continue;
 
         PGUI::StartFrame();
-
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
         
         topbar.RenderTopBar();
         RenderTabs();

@@ -85,9 +85,14 @@ void Tab::Render()
     }
     else
     {
+        std::multimap<int, std::function<void(ImDrawList*)>> draw_queue;
         for (size_t i = 0; i < currentPage->nodes.size(); i++)
         {
-            currentPage->nodes[i].Render();
+            currentPage->nodes[i].Render(draw_queue, 0);
+        }
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+        for (auto& pair : draw_queue) {
+            pair.second(dl);
         }
     }
     ImGui::End();

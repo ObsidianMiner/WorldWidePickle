@@ -158,10 +158,10 @@ void Website::CreateRawTextVersion()
     content = removeHtmlComments(content);
     content = removeDoctype(content);
     rawTextVersion = content;
-    rawTextVersion = stripHiddenTags(rawTextVersion);
-    rawTextVersion = removeOuterHtmlTag(rawTextVersion);
-    rawTextVersion = tidyFormat(rawTextVersion);
-    rawTextVersion = removeDoctype(rawTextVersion);
+    //rawTextVersion = stripHiddenTags(rawTextVersion);
+    //rawTextVersion = removeOuterHtmlTag(rawTextVersion);
+    //rawTextVersion = tidyFormat(rawTextVersion);
+    //rawTextVersion = removeDoctype(rawTextVersion);
 }
 
 const char* Website::getContent() const

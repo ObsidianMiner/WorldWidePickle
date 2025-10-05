@@ -3,7 +3,10 @@
 #include <tuple>
 #include <vector>
 #include <unordered_map>
+#include <functional>
+#include <map>
 
+class ImDrawList;
 
 struct Attribute
 {
@@ -20,11 +23,35 @@ public:
 	std::string innerText;
 	std::vector<Node*> GetParents();
 
-	void Render();
+	void Render(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
 	bool operator==(const Node& other)
 	{
 		return this == &other;
 	}
+private:
+	inline void RenderChildren(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
+	inline void RenderContents(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
+};
+struct DOMBuilder
+{
+public:
+	std::vector<Node> ParseNodes();
+	DOMBuilder(const std::string& html) : htmlContent(html) {}
+private:
+	void StartTag();
+	void AddAttributeOrType();
+	void EndTag();
+	const std::string& htmlContent;
+	int pointer = 0;
+	int buildingNodeStart = 0;
+	bool insideTag = false;
+	bool inClosingTag = false;
+	bool readingAttribute = false;
+	std::vector<Node> rootNodes;
+	Node* currentContext = nullptr;
+	Node* buildingNode = nullptr;
+	int lastStartTagPos = 0;
+	int lastEndTagPos = 0;
 };
 std::vector<Node> ParseNodes(const std::string& htmlContent);
 
