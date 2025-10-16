@@ -12,13 +12,32 @@ public:
 	char urlBuffer[256];
 	string currentURL;
 	unique_ptr<Website> currentPage;
+
+	ImVec2 contentSize;
+	ImVec2 contentPos;
+
 	Tab(string url);
 	void Render();
+	void RenderURLBar();
+	void DisplayPage();
 	void SwitchPage(string url);
 private:
+	ImVec2 winSize;
+	ImVec2 winPos;
 	bool viewingSource;
+	bool viewingDOM;
+	bool viewingCSS;
+	bool firstFrame;
+	bool displayingRightPannel;
+	ImGuiID dockID;
+
 	bool attemptingToLoadNewPage;
 	vector<string> urlHistory;
+	void SetupDocking();
+	void DisplaySource();
+	void DisplayDOM();
+	void DisplayCSS();
+	void UpdateDocking();
 };
 extern vector<Tab> tabs;
 extern int maxTabID;

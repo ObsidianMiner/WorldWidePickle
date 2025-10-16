@@ -108,6 +108,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)/Libraries/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -125,6 +127,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)/Libraries/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,9 +145,13 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\CSSBuilder.cpp" />
     <ClCompile Include="src\DOM.cpp" />
+    <ClCompile Include="src\DOMBuilder.cpp" />
     <ClCompile Include="src\DOMRender.cpp" />
+    <ClCompile Include="src\Fetch.cpp" />
     <ClCompile Include="src\PickleGUI.cpp" />
+    <ClCompile Include="src\ReferenceLoading.cpp" />
     <ClCompile Include="src\Tab.cpp" />
     <ClCompile Include="src\Topbar.cpp" />
     <ClCompile Include="src\Website.cpp" />
@@ -158,9 +166,12 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="src\CSSBuilder.h" />
     <ClInclude Include="src\DOM.h" />
+    <ClInclude Include="src\DOMBuilder.h" />
     <ClInclude Include="src\ImMath.h" />
     <ClInclude Include="src\PickleGUI.h" />
+    <ClInclude Include="src\StringCasting.h" />
     <ClInclude Include="src\Tab.h" />
     <ClInclude Include="src\Topbar.h" />
     <ClInclude Include="src\Website.h" />

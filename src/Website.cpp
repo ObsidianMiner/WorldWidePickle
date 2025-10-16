@@ -1,82 +1,83 @@
 #include "Website.h"
-#include <curl/curl.h>
 #include <thread>
 #include <iostream>
 #include <regex>
+#include "PickleGUI.h"
+#include "CSSBuilder.h"
 #include <tidy/tidybuffio.h>
+#include "CSSBuilder.h"
+#include "Tab.h"
 
-size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp)
-{
-    size_t totalSize = size * nmemb;
-    std::string* response = static_cast<std::string*>(userp);
-    response->append(static_cast<char*>(contents), totalSize);
-    return totalSize;
-}
 
-std::string getWebsite(std::string url)
-{
-    std::string website = "";
-    CURL* curl;
-    CURLcode res;
-    curl = curl_easy_init();
-    if (curl) {
-        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-        curl_easy_setopt(curl, CURLOPT_CAINFO, "C:\\Users\\JGEle\\Downloads\\curl-8.16.0_1-win64-mingw(1)\\curl-8.16.0_1-win64-mingw\\bin\\cacert.pem");
-        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &website);
-        curl_easy_setopt(curl, CURLOPT_USERAGENT, "WorldWidePickle/1.0");
-        // Perform the request, res will get the return code
-        res = curl_easy_perform(curl);
-        // Check for errors
-        if (res != CURLE_OK)
-        {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-            switch (res)
-            {
-            case CURLE_BAD_PASSWORD_ENTERED:
-                website = "Bad Password (Not supported yet)";
-                break;
-            case CURLE_GOT_NOTHING:
-                website = "Got nothing";
-                break;
-            default:
-                website = curl_easy_strerror(res);
-                break;
-            }
-        }
-        // always cleanup
-        curl_easy_cleanup(curl);
-    }
-    return website;
-}
-
-Website::Website(std::string url)
+Website::Website(std::string url, Tab* tab)
 {
     loaded = false;
+    wasLoaded = false;
 	this->url = url;
-    content = "Loading...";
-	rawTextVersion = "Loading...";
-    fetchContent();
-	//std::thread(&Website::fetchContent, this).detach();
+    this->tab = tab;
+    name = url;
+    content = "<h1>Loading...</h1>";
+	rawTextVersion = "<h1>Loading...</h1>";
+    styles = globalStyles;
+    nodes = std::make_shared<std::vector<Node>>();
+	std::thread(&Website::FetchContent, this).detach();
 }
 
 Website::~Website()
 {
-
+    for (auto image : images)
+    {
+		if (image.second.img == nullptr) continue;
+        image.second.img->Release();
+		image.second.img = nullptr;
+    }
 }
 
-void Website::fetchContent()
+void Website::FetchContent()
 {
     std::cout << "Fetching URL:" << url << std::endl;
-    content = getWebsite(url);
+    content = GetTextFromFileOrURL(url, true);
 	CreateRawTextVersion();
-    std::cout << "Fetched HTML" << std::endl << content << std::endl;
-	nodes = ParseNodes(content);
-	loaded = true;
-	std::cout << "Finished fetching URL:" << url << std::endl;
+    std::cout << "Fetched HTML from" << url << std::endl;
+    /*
+    auto parsedNodes = std::make_shared<std::vector<Node>>(ParseNodes(content));
+	nodes.store(parsedNodes);
+    for (Node& node : *parsedNodes)
+    {
+        node.LoadReferences(*this);
+    }
+    StyleNodes();
+    interpretedDOM = PrintDOM(*ReadNodes());
+    interpretedCSS = CSSBuilder::CSSString(styles);
+	std::cout << "Finished fetching URL:" << url << std::endl;*/
+    loaded = true;
+}
+void FixParentPointers(std::vector<Node>& nodes, Node* parent)
+{
+    for (auto& node : nodes)
+    {
+        node.parent = parent;
+        FixParentPointers(node.children, &node);
+    }
+}
+//Should be called on a duplicate DOM so the main thread can keep rendering, and then swaped afterward
+void Website::StyleNodes()
+{
+    auto styledNodes = ReadNodes();
+    std::unordered_map<std::string, RuleValue> emptyStyle;
+    for (Node& node : *styledNodes)
+    {
+        node.UpdateStyle(*this, emptyStyle);
+    }
+    for (Node& node : *styledNodes)
+    {
+        node.CaculatePosition(tab->contentSize.x, *this);
+    }
+    FixParentPointers(*styledNodes, nullptr);
+    nodes.store(styledNodes);
 }
 
-std::string stripHiddenTags(const std::string& html)
+std::string StripHiddenTags(const std::string& html)
 {
     std::regex multiTagRegex(R"(<(header|nav|footer|head|style|script)\b[^>]*?>[\s\S]*?<\/\1>)", std::regex::icase);
     std::string result = html;
@@ -90,12 +91,12 @@ std::string stripHiddenTags(const std::string& html)
 
     return result;
 }
-std::string removeDoctype(const std::string& html)
+std::string RemoveDoctype(const std::string& html)
 {
     std::regex doctypeRegex(R"(<!DOCTYPE[^>]*>)", std::regex::icase);
     return std::regex_replace(html, doctypeRegex, "");
 }
-std::string removeOuterHtmlTag(const std::string& html)
+std::string RemoveOuterHtmlTag(const std::string& html)
 {
     // Matches opening <html ...> tag (with optional attributes) at start, and closing </html> tag at the end
     std::regex htmlTagRegex(R"(<html\b[^>]*>([\s\S]*?)<\/html>)", std::regex::icase);
@@ -108,11 +109,11 @@ std::string removeOuterHtmlTag(const std::string& html)
     // If no outer html tags, just return original
     return html;
 }
-std::string removeHtmlComments(const std::string& input) {
+std::string RemoveHtmlComments(const std::string& input) {
     std::regex commentRegex(R"(<!--.*?-->)"); // non-greedy
     return std::regex_replace(input, commentRegex, "");
 }
-std::string tidyFormat(const std::string& html)
+std::string TidyFormat(const std::string& html)
 {
     TidyDoc tdoc = tidyCreate();
     TidyBuffer output;
@@ -141,9 +142,9 @@ std::string tidyFormat(const std::string& html)
         tidyBufFree(&errbuf);
         tidyRelease(tdoc);
 
-        //Remove all headers
+        /*
         std::regex headRegex(R"(<head\b[^>]*>[\s\S]*?<\/head>\s*)", std::regex::icase);
-        prettyHtml = std::regex_replace(prettyHtml, headRegex, "");
+        prettyHtml = std::regex_replace(prettyHtml, headRegex, "");*/
         return prettyHtml;
     }
 
@@ -154,9 +155,9 @@ std::string tidyFormat(const std::string& html)
 }
 void Website::CreateRawTextVersion()
 {
-	content = tidyFormat(content);
-    content = removeHtmlComments(content);
-    content = removeDoctype(content);
+	content = TidyFormat(content);
+    content = RemoveHtmlComments(content);
+    content = RemoveDoctype(content);
     rawTextVersion = content;
     //rawTextVersion = stripHiddenTags(rawTextVersion);
     //rawTextVersion = removeOuterHtmlTag(rawTextVersion);

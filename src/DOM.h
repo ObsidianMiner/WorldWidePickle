@@ -5,65 +5,55 @@
 #include <unordered_map>
 #include <functional>
 #include <map>
+#include <variant>
+#include <imgui/imgui.h>
 
 class ImDrawList;
+class Website;
 
-struct Attribute
-{
-	std::string name;
-	std::string value;
-};
+#define RuleValue std::variant<std::string, int, float, ImU32>
+
 struct Node
 {  
 public:
 	std::string type;
 	std::unordered_map<std::string, std::string> attributes;
+	std::unordered_map<std::string, RuleValue> style;
+
+	ImVec2 localPos;
+	ImVec2 GlobalPos();
+	ImVec2 contentSize;
+	ImVec2 topLeftMargin;
+	ImVec2 bottomRightMargin;
+	ImVec2 border;
+	ImVec2 padding;
+
 	Node* parent = nullptr;
 	std::vector<Node> children;
-	std::string innerText;
 	std::vector<Node*> GetParents();
 
+	int id;
+
 	void Render(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
+	void LoadReferences(Website& website);
+	void CaculatePosition(float parentWidth, Website& website);
+	void CaculateContentSize();
+	void UpdateStyle(const Website& website, const std::unordered_map<std::string, RuleValue>& inheritedStyle);
 	bool operator==(const Node& other)
 	{
 		return this == &other;
 	}
+
+	bool HasAttribute(std::string attribute);
+	bool HasStyle(std::string s);
 private:
 	inline void RenderChildren(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
+	void RenderImage(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
+	void RenderTextElement(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
 	inline void RenderContents(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
-};
-struct DOMBuilder
-{
-public:
-	std::vector<Node> ParseNodes();
-	DOMBuilder(const std::string& html) : htmlContent(html) {}
-private:
-	void StartTag();
-	void AddAttributeOrType();
-	void EndTag();
-	const std::string& htmlContent;
-	int pointer = 0;
-	int buildingNodeStart = 0;
-	bool insideTag = false;
-	bool inClosingTag = false;
-	bool readingAttribute = false;
-	std::vector<Node> rootNodes;
-	Node* currentContext = nullptr;
-	Node* buildingNode = nullptr;
-	int lastStartTagPos = 0;
-	int lastEndTagPos = 0;
 };
 std::vector<Node> ParseNodes(const std::string& htmlContent);
 
-void PrintNode(Node* node, int indent);
+std::string PrintNode(Node* node, int indent);
 
-void PrintDOM(std::vector<Node> children);
-
-/// <summary>
-/// Compares two nodes. Does not check parent
-/// </summary>
-/// <param name="node1"></param>
-/// <param name="node2"></param>
-/// <returns></returns>
-bool operator==(const Node& node1, const Node& node2);
-bool operator==(const Attribute& att1, const Attribute& att2);
+std::string PrintDOM(std::vector<Node> children);

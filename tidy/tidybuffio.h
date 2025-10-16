@@ -25,6 +25,8 @@
 #include "tidy.h"
 
 #ifdef __cplusplus
+#include <cstdint> // Add this include for uint8_t
+typedef unsigned char TidyByte;
 extern "C" {
 #endif
 
@@ -36,7 +38,7 @@ TIDY_STRUCT
 struct _TidyBuffer 
 {
     TidyAllocator* allocator;  /**< Memory allocator */
-    byte* bp;                  /**< Pointer to bytes */
+    TidyByte* bp;                  /**< Pointer to bytes */
     uint  size;                /**< Number of bytes currently in use */
     uint  allocated;           /**< Number of bytes allocated */
     uint  next;                /**< Offset of current input position */
@@ -71,7 +73,7 @@ TIDY_EXPORT void TIDY_CALL tidyBufFree( TidyBuffer* buf );
 TIDY_EXPORT void TIDY_CALL tidyBufClear( TidyBuffer* buf );
 
 /** Attach to existing buffer */
-TIDY_EXPORT void TIDY_CALL tidyBufAttach( TidyBuffer* buf, byte* bp, uint size );
+TIDY_EXPORT void TIDY_CALL tidyBufAttach( TidyBuffer* buf, TidyByte* bp, uint size );
 
 /** Detach from buffer.  Caller must free. */
 TIDY_EXPORT void TIDY_CALL tidyBufDetach( TidyBuffer* buf );
@@ -81,7 +83,7 @@ TIDY_EXPORT void TIDY_CALL tidyBufDetach( TidyBuffer* buf );
 TIDY_EXPORT void TIDY_CALL tidyBufAppend( TidyBuffer* buf, void* vp, uint size );
 
 /** Append one byte to buffer.  Expand if necessary. */
-TIDY_EXPORT void TIDY_CALL tidyBufPutByte( TidyBuffer* buf, byte bv );
+TIDY_EXPORT void TIDY_CALL tidyBufPutByte( TidyBuffer* buf, TidyByte bv );
 
 /** Get byte from end of buffer */
 TIDY_EXPORT int TIDY_CALL  tidyBufPopByte( TidyBuffer* buf );
@@ -94,7 +96,7 @@ TIDY_EXPORT int TIDY_CALL  tidyBufGetByte( TidyBuffer* buf );
 TIDY_EXPORT Bool TIDY_CALL tidyBufEndOfInput( TidyBuffer* buf );
 
 /** Put a byte back into the buffer.  Decrement input offset. */
-TIDY_EXPORT void TIDY_CALL tidyBufUngetByte( TidyBuffer* buf, byte bv );
+TIDY_EXPORT void TIDY_CALL tidyBufUngetByte( TidyBuffer* buf, TidyByte bv );
 
 
 /**************

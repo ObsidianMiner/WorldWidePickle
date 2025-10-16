@@ -159,7 +159,7 @@ opaque_type( TidyMessage );
 opaque_type( TidyMessageArgument );
 
 #endif
-
+typedef unsigned char TidyByte;
 
 /** @} end Opaque group */
 /* MARK: - Memory Allocation */
@@ -1067,7 +1067,7 @@ typedef struct _TidyBuffer TidyBuffer;
 typedef int  (TIDY_CALL *TidyGetByteFunc)( void* sourceData );
 
 /** Input Callback: unget a byte of input */
-typedef void (TIDY_CALL *TidyUngetByteFunc)( void* sourceData, byte bt );
+typedef void (TIDY_CALL *TidyUngetByteFunc)( void* sourceData, TidyByte bt );
 
 /** Input Callback: is end of input? */
 typedef Bool (TIDY_CALL *TidyEOFFunc)( void* sourceData );
@@ -1119,7 +1119,7 @@ TIDY_EXPORT Bool TIDY_CALL tidyIsEOF( TidyInputSource* source );
  */
 
 /** Output callback: send a byte to output */
-typedef void (TIDY_CALL *TidyPutByteFunc)( void* sinkData, byte bt );
+typedef void (TIDY_CALL *TidyPutByteFunc)( void* sinkData, TidyByte bt );
 
 /** This type defines an output destination capable of accepting raw bytes
  ** of output

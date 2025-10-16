@@ -18,6 +18,7 @@ ImGuiIO* PGUI::io = nullptr;
 WNDCLASSEXW PGUI::wc = {};
 HWND PGUI::hwnd = nullptr;
 ImVec4 PGUI::clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+ImGuiID PGUI::tabBarDockId;
 
 
 PGUI::PGUI()
@@ -58,6 +59,7 @@ PGUI::PGUI()
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsLight();
+    (*io).IniFilename = nullptr;
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
@@ -197,9 +199,8 @@ void PGUI::Render()
     //HRESULT hr = g_pSwapChain->Present(0, 0); // Present without vsync
     swapChainIncluded = (hr == DXGI_STATUS_OCCLUDED);
 }
-void SetupDockingLayout(ImGuiID dockspace_id)
+void PGUI::SetupDockingLayout(ImGuiID dockspace_id)
 {
-
     ImGui::DockBuilderRemoveNode(dockspace_id); // Clear previous layout
     ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
     ImGui::DockBuilderSetNodeSize(dockspace_id, ImGui::GetMainViewport()->Size);
@@ -207,9 +208,8 @@ void SetupDockingLayout(ImGuiID dockspace_id)
     // Split dockspace into two nodes: top and bottom
     ImGuiID dock_main_id = dockspace_id;
     ImGuiID dock_id_top;
-    ImGuiID dock_id_bottom;
 
-    ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.085f, &dock_id_top, &dock_id_bottom);
+    ImGui::DockBuilderSplitNode(dock_main_id, ImGuiDir_Up, 0.085f, &dock_id_top, &tabBarDockId);
     // 0.1f means 10% height for top
 
     // Dock windows
@@ -217,9 +217,12 @@ void SetupDockingLayout(ImGuiID dockspace_id)
     if (node)
         node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
     ImGui::DockBuilderDockWindow("TopBar", dock_id_top);
-    ImGui::DockBuilderDockWindow("Tab##1", dock_id_bottom);
 
     ImGui::DockBuilderFinish(dockspace_id);
+}
+void PGUI::DockWindowToTabBar(const char* windowName)
+{
+    ImGui::DockBuilderDockWindow(windowName, tabBarDockId);
 }
 
 void PGUI::StartFrame()

@@ -1,148 +1,36 @@
-#include "DOM.h"
+#include "DOMBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>
 #include <unordered_map>
+#include "DOM.h"
+#include "ImMath.h"
 
 using namespace std;
 
-inline void DOMBuilder::AddAttributeOrType()
+
+
+bool Node::HasAttribute(std::string attribute)
 {
-    if (readingAttribute)
-    {
-        int startChar = buildingNodeStart + 1 + buildingNode->type.size();
-        string attributePortion = htmlContent.substr(startChar, pointer - startChar - 1);
-        int equalIndex = attributePortion.find('=');
-        if (equalIndex != -1)
-        {
-            buildingNode->attributes.emplace(attributePortion.substr(1, equalIndex - 1), attributePortion.substr(equalIndex + 2));
-        }
-    }
-    else
-    {
-        buildingNode->type = htmlContent.substr(buildingNodeStart + 1, pointer - buildingNodeStart - 1);
-        readingAttribute = true;
-    }
+    return attributes.find(attribute) != attributes.end();
 }
-inline void DOMBuilder::StartTag()
+bool Node::HasStyle(std::string s)
 {
-    insideTag = true;
-    readingAttribute = false;
-    buildingNodeStart = pointer;
-    if (currentContext == nullptr)
-    {
-        rootNodes.emplace_back();
-        buildingNode = &rootNodes[rootNodes.size() - 1];
-    }
-    else
-    {
-        currentContext->children.emplace_back();
-        buildingNode = &currentContext->children[currentContext->children.size() - 1];
-        lastStartTagPos = pointer;
-    }
-    buildingNode->parent = currentContext;
-    currentContext = buildingNode;
+    return style.find(s) != style.end();
 }
-std::string trim(const std::string& str) {
-    auto is_not_space = [](unsigned char ch) {
-        return !std::isspace(ch);
-        };
 
-    auto begin = std::find_if(str.begin(), str.end(), is_not_space);
-    if (begin == str.end()) return ""; // All whitespace
 
-    auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
-    return std::string(begin, end);
-}
-inline void DOMBuilder::EndTag()
+ImVec2 Node::GlobalPos()
 {
-    AddAttributeOrType();
-    if (buildingNode->type[0] == '/')
+    uintptr_t pval = reinterpret_cast<uintptr_t>(parent);
+    if (pval < 0x1000 || pval > 0xFFFFFFFFFFFF)
     {
-        buildingNode->type = buildingNode->type.substr(1);
-        std::vector<Node*> parents = buildingNode->GetParents();
-#ifdef ParseDebug
-        std::cout << std::string(parents.size() - 1, ' ') << "Closed node: " << buildingNode->type << std::endl;
-#endif
-        bool completedNode = false;
-        for (size_t i = 0; i < parents.size(); i++)
-        {
-            if (parents[i]->type == buildingNode->type)
-            {
-                //Remove the closing tag from becoming a child
-                parents[i]->children.erase(
-                    std::remove_if(parents[i]->children.begin(), parents[i]->children.end(),
-                        [this](const Node& obj) {
-                            return &obj == this->buildingNode;
-                        }),
-                    parents[i]->children.end()
-                );
-
-
-                if (parents[i]->children.size() == 0)
-                {
-                    parents[i]->innerText = htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1));
-					parents[i]->innerText = trim(parents[i]->innerText);
-#ifdef ParseDebug
-                    std::cout << parents[i]->innerText << std::endl;
-#endif
-                }
-
-                currentContext = parents[i]->parent;
-                completedNode = true;
-                break;
-            }
-        }
-        if (!completedNode)
-        {
-            std::cout << "Could not properly close node: " << buildingNode->type << std::endl;
-        }
+        cout << "Uh oh, parent invalid." << endl;
+        return localPos;
     }
-    else
-    {
-        std::vector<Node*> parents = buildingNode->GetParents();
-#ifdef ParseDebug
-        std::cout << std::string(parents.size(), ' ') << "Parsed node: " << buildingNode->type << std::endl;
-#endif
-    }
-    lastEndTagPos = pointer;
-#ifdef ParseDebug
-    PrintDOM(rootNodes);
-#endif
-    insideTag = false;
+    if (parent != nullptr) return localPos + parent->GlobalPos();
+    return localPos;
 }
-std::vector<Node> DOMBuilder::ParseNodes()
-{
-    while (pointer < htmlContent.length())
-    {
-        if (htmlContent[pointer] == '<')
-        {
-            StartTag();
-        }
-        else if (htmlContent[pointer] == ' ' && insideTag)
-        {
-            AddAttributeOrType();
-        }
-        else if (htmlContent[pointer] == '>' && buildingNode != nullptr)
-        {
-            EndTag();
-        }
-
-        pointer++;
-    }
-    std::cout << "Finished parsing nodes." << std::endl;
-    PrintDOM(rootNodes);
-    return rootNodes;
-}
-
-std::vector<Node> ParseNodes(const string& htmlContent)
-{
-    DOMBuilder builder = DOMBuilder(htmlContent);
-    return builder.ParseNodes();
-}
-
-
-
 
 std::vector<Node*> Node::GetParents()
 {
@@ -167,27 +55,26 @@ string AttributesToString(const unordered_map<string, string> attributes)
     }
     return result;
 }
-void PrintNode(Node* node, int indent)
+string PrintNode(Node* node, int indent)
 {
-
-    std::cout << std::string(indent, ' ') << node->type << AttributesToString(node->attributes) << std::endl;
+    string output;
+    output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes) + "\n";
     for (size_t i = 0; i < node->children.size(); i++)
     {
-        PrintNode(&node->children[i], indent + 1);
+        output += PrintNode(&node->children[i], indent + 1);
     }
+    return output;
 }
-void PrintDOM(std::vector<Node> children)
+string PrintDOM(std::vector<Node> children)
 {
+    string output;
     for (size_t i = 0; i < children.size(); i++)
     {
-        PrintNode(&children[i], 0);
+        output += PrintNode(&children[i], 0);
     }
+    return output;
 }
 bool operator==(const Node& node1, const Node& node2)
 {
-    return node1.type == node2.type && node1.attributes == node2.attributes && node1.innerText == node2.innerText && node1.children.size() == node2.children.size();
-}
-bool operator==(const Attribute& att1, const Attribute& att2)
-{
-	return att1.name == att2.name && att1.value == att2.value;
+    return node1.type == node2.type && node1.attributes == node2.attributes && node1.children.size() == node2.children.size();
 }

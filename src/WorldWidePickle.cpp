@@ -12,6 +12,9 @@
 #include <imgui/imgui_internal.h>
 #include "WWP.h"
 #include "Topbar.h"
+#include "CSSBuilder.h"
+
+using namespace std::string_literals;
 
 TopBar topbar;
 
@@ -27,16 +30,15 @@ void RenderTabs()
 // Main code
 int main(int, char**)
 {
-
     PGUI::PGUI();
     ImGui::StyleColorsDark();
 
-    // Our state
-    bool show_demo_window = true;
-    bool show_another_window = false;
-
+	std::string globalPath = "C:\\Users\\JGEle\\source\\repos\\WorldWidePickle\\x64\\Debug\\global.css"s;
+    std::string globalCSS = GetTextFromFileOrURL(globalPath, false);
+    CSSBuilder globalStylesBuilder(globalCSS);
+    globalStyles = globalStylesBuilder.ParseCSS();
     
-    tabs.emplace_back("http://example.com");
+    tabs.emplace_back("https://example.com");
 
     // Main loop
     bool done = false;

@@ -12,8 +12,6 @@ class PGUI
 public:
 	static ImVec4 clear_color;
 	static ImGuiIO* io;
-	static WNDCLASSEXW wc;
-	static HWND hwnd;
 	static UINT resizeWidth, resizeHeight;
 	static bool swapChainIncluded;
 	static bool firstFrame;
@@ -40,4 +38,10 @@ public:
 	/// Call at the begining of each frame
 	/// </summary>
 	static void StartFrame();
+	static void DockWindowToTabBar(const char* windowName);
+private:
+	static void SetupDockingLayout(ImGuiID dockspace_id);
+	static ImGuiID tabBarDockId;
+	static WNDCLASSEXW wc;
+	static HWND hwnd;
 };
