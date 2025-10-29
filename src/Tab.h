@@ -34,6 +34,7 @@ private:
 	bool attemptingToLoadNewPage;
 	vector<string> urlHistory;
 	void SetupDocking();
+	void OnResize();
 	void DisplaySource();
 	void DisplayDOM();
 	void DisplayCSS();

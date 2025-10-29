@@ -22,12 +22,6 @@ bool Node::HasStyle(std::string s)
 
 ImVec2 Node::GlobalPos()
 {
-    uintptr_t pval = reinterpret_cast<uintptr_t>(parent);
-    if (pval < 0x1000 || pval > 0xFFFFFFFFFFFF)
-    {
-        cout << "Uh oh, parent invalid." << endl;
-        return localPos;
-    }
     if (parent != nullptr) return localPos + parent->GlobalPos();
     return localPos;
 }
@@ -58,7 +52,10 @@ string AttributesToString(const unordered_map<string, string> attributes)
 string PrintNode(Node* node, int indent)
 {
     string output;
-    output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes) + "\n";
+    string globalPos = " | GPos: " + to_string(int(node->GlobalPos().x)) + ' ' + to_string(int(node->GlobalPos().y));
+    string localPos = "         | LPos: " + to_string(int(node->localPos.x)) + ' ' + to_string(int(node->localPos.y));
+    string contentSize = " | CS: " + to_string(int(node->contentSize.x)) + ' ' + to_string(int(node->contentSize.y));
+    output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes) + localPos + globalPos + contentSize + "\n";
     for (size_t i = 0; i < node->children.size(); i++)
     {
         output += PrintNode(&node->children[i], indent + 1);

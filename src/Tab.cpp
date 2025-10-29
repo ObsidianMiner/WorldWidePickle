@@ -86,6 +86,18 @@ void Tab::SetupDocking()
     ImGui::DockBuilderDockWindow(tabWindowName, tabDock);
     if(floating) ImGui::DockBuilderFinish(dockID);
 }
+void Tab::OnResize()
+{
+    if (currentPage->loaded)
+    {
+        std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
+        for (size_t i = 0; i < (*domSnapshot).size(); i++)
+        {
+            (*domSnapshot)[i].CaculatePosition(contentSize.x, *currentPage);
+		}
+        currentPage->nodes.store(domSnapshot);
+    }
+}
 void Tab::Render()
 {
     renderingTab = this;
@@ -99,7 +111,12 @@ void Tab::Render()
         return;
     }
 	winPos = ImGui::GetWindowPos();
-	winSize = ImGui::GetWindowSize();
+	ImVec2 newWinSize = ImGui::GetWindowSize();
+    if (newWinSize.x != winSize.x || newWinSize.y != winSize.y)
+    {
+        winSize = newWinSize;
+        OnResize();
+	}
     contentSize = ImGui::GetContentRegionAvail();
 
     RenderURLBar();
@@ -197,10 +214,11 @@ void Tab::DisplayPage()
 
     contentPos = ImGui::GetCursorPos();
 
+    /*
     for (size_t i = 0; i < (*domSnapshot).size(); i++)
     {
         (*domSnapshot)[i].CaculatePosition(contentSize.x, *currentPage);
-    }
+    }*/
     for (size_t i = 0; i < (*domSnapshot).size(); i++)
     {
         (*domSnapshot)[i].Render(draw_queue, 0);
@@ -230,6 +248,7 @@ void Tab::DisplayDOM()
 {
     char name[256];
     std::snprintf(name, sizeof(name), "%s DOM###DOM %d", currentPage->name.c_str(), id);
+    currentPage->interpretedDOM = PrintDOM(*currentPage->ReadNodes());
     ImGui::Begin(name);
     ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
     ImGui::InputTextMultiline(

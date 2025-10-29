@@ -21,6 +21,7 @@ Website::Website(std::string url, Tab* tab)
     styles = globalStyles;
     nodes = std::make_shared<std::vector<Node>>();
 	std::thread(&Website::FetchContent, this).detach();
+    highestID = 0;
 }
 
 Website::~Website()
@@ -33,25 +34,6 @@ Website::~Website()
     }
 }
 
-void Website::FetchContent()
-{
-    std::cout << "Fetching URL:" << url << std::endl;
-    content = GetTextFromFileOrURL(url, true);
-	CreateRawTextVersion();
-    std::cout << "Fetched HTML from" << url << std::endl;
-    /*
-    auto parsedNodes = std::make_shared<std::vector<Node>>(ParseNodes(content));
-	nodes.store(parsedNodes);
-    for (Node& node : *parsedNodes)
-    {
-        node.LoadReferences(*this);
-    }
-    StyleNodes();
-    interpretedDOM = PrintDOM(*ReadNodes());
-    interpretedCSS = CSSBuilder::CSSString(styles);
-	std::cout << "Finished fetching URL:" << url << std::endl;*/
-    loaded = true;
-}
 void FixParentPointers(std::vector<Node>& nodes, Node* parent)
 {
     for (auto& node : nodes)
@@ -59,6 +41,27 @@ void FixParentPointers(std::vector<Node>& nodes, Node* parent)
         node.parent = parent;
         FixParentPointers(node.children, &node);
     }
+}
+void Website::FetchContent()
+{
+    std::cout << "Fetching URL:" << url << std::endl;
+    content = GetTextFromFileOrURL(url, true);
+	CreateRawTextVersion();
+    std::cout << "Fetched HTML from" << url << std::endl;
+    auto parsedNodes = std::make_shared<std::vector<Node>>(ParseNodes(content));
+	FixParentPointers(*parsedNodes, nullptr);
+    
+	nodes.store(parsedNodes);
+    
+    for (Node& node : *parsedNodes)
+    {
+        node.LoadReferences(*this);
+    }
+    StyleNodes();
+    interpretedDOM = PrintDOM(*ReadNodes());
+    interpretedCSS = CSSBuilder::CSSString(styles);
+	std::cout << "Finished fetching URL:" << url << std::endl;
+    loaded = true;
 }
 //Should be called on a duplicate DOM so the main thread can keep rendering, and then swaped afterward
 void Website::StyleNodes()

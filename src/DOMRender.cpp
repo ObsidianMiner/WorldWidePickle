@@ -5,16 +5,17 @@
 #include "Tab.h"
 #include "ImMath.h"
 #include <curl/curl.h>
-#include "StringCasting.h"
+#include "StringUtils.h"
 
 void Node::Render(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
 {
     if (type == "head") return;
 
 
-	if (HasStyle("padding")) padding = ImVec2(std::get<int>(style["padding"]), std::get<int>(style["padding"]));
+	//if (HasStyle("padding")) padding = ImVec2(std::get<int>(style["padding"]), std::get<int>(style["padding"]));
     ImVec2 totalImbed = padding + border + topLeftMargin;
     ImVec2 bg_min = ImGui::GetCursorScreenPos() - totalImbed;
+	//ImVec2 bg_min = GlobalPos();
     ImVec2 cursor = ImGui::GetCursorScreenPos();
 
     ImGui::BeginGroup();
@@ -22,11 +23,12 @@ void Node::Render(std::multimap<int, std::function<void(ImDrawList*)>>& queue, i
 
     RenderContents(queue, layer);
     RenderChildren(queue, layer + 1);
+    ImGui::Dummy(ImVec2(0,0));
 
     ImGui::EndGroup();
     if (type == "div")
     {
-        ImVec2 bg_max = ImGui::GetItemRectMax() + totalImbed;
+        ImVec2 bg_max = bg_min + contentSize + totalImbed;
 
         ImU32 bg_color = IM_COL32(60, 60, 60, 180);
         float rounding = 6.0f;
@@ -99,7 +101,7 @@ void Node::Render(std::multimap<int, std::function<void(ImDrawList*)>>& queue, i
             attributes["value"] = std::string(buffer);
         }
     }
-    ImGui::Dummy(padding);
+    //ImGui::Dummy(padding);
 }
 inline float GetFontSize(std::unordered_map<std::string, RuleValue> style)
 {
@@ -169,22 +171,93 @@ inline void Node::RenderContents(std::multimap<int, std::function<void(ImDrawLis
 
 void Node::CaculatePosition(float parentWidth, Website&  website)
 {
-    return;
     contentSize = ImVec2(parentWidth, 0);
+    if (HasStyle("padding")) padding = ImVec2(std::get<int>(style["padding"]), std::get<int>(style["padding"]));
+    if(HasStyle("margin"))
+    {
+        if (std::holds_alternative<int>(style["margin"]))
+        {
+            topLeftMargin = ImVec2(std::get<int>(style["margin"]), std::get<int>(style["margin"]));
+            bottomRightMargin = ImVec2(std::get<int>(style["margin"]), std::get<int>(style["margin"]));
+        }
+        else if (std::holds_alternative<float>(style["margin"]))
+        {
+            topLeftMargin = ImVec2(std::get<float>(style["margin"]), std::get<float>(style["margin"]));
+            bottomRightMargin = ImVec2(std::get<float>(style["margin"]), std::get<float>(style["margin"]));
+        }
+	}
+    if (HasStyle("margin-left"))
+    {
+        if (std::holds_alternative<int>(style["margin-left"]))
+        {
+            topLeftMargin.x = std::get<int>(style["margin-left"]);
+        }
+        else if (std::holds_alternative<float>(style["margin-left"]))
+        {
+            topLeftMargin.x = std::get<float>(style["margin-left"]);
+        }
+    }
+    else if (HasStyle("margin-right"))
+    {
+        if (std::holds_alternative<int>(style["margin-right"]))
+        {
+            bottomRightMargin.x = std::get<int>(style["margin-right"]);
+        }
+        else if (std::holds_alternative<float>(style["margin-right"]))
+        {
+            bottomRightMargin.x = std::get<float>(style["margin-right"]);
+        }
+    }
+    
 
     float currentY = 0;
+    float currentX = 0;
+    float maxLineHeight = 0;
+    bool wasBlock = false;
     if (children.size() > 0)
     {
         for (size_t i = 0; i < children.size(); i++)
         {
-            children[i].CaculatePosition(parentWidth, website);
 
-            //Caculate childrens marigns
-			
-            
-            children[i].localPos = ImVec2(children[i].topLeftMargin.x + children[i].border.x + children[i].padding.x, currentY);
-            currentY = children[i].localPos.y + children[i].contentSize.y + children[i].padding.y;
+            bool blockDisplay = true;
+            if(children[i].HasStyle("display") && std::get<string>(children[i].style["display"]) == "inline")
+            {
+                blockDisplay = false;
+			}
+
+            if (blockDisplay)
+            {
+                wasBlock = true;
+                children[i].CaculatePosition(parentWidth, website);
+                if (maxLineHeight > 0)
+                {
+                    currentY += maxLineHeight;
+                    maxLineHeight = 0;
+                }
+
+                children[i].localPos = ImVec2(children[i].topLeftMargin.x + children[i].border.x + children[i].padding.x, currentY);
+                children[i].localPos.y = currentY;
+                currentX = children[i].contentSize.x + children[i].topLeftMargin.x + children[i].bottomRightMargin.x;
+                currentY = children[i].localPos.y + children[i].contentSize.y + children[i].padding.y + children[i].bottomRightMargin.y + children[i].topLeftMargin.y;
+            }
+            else
+            {
+                if (wasBlock)
+                {
+                    currentX = 0;
+                    wasBlock = false;
+                }
+                children[i].CaculatePosition(0, website);
+                children[i].localPos = ImVec2(currentX + children[i].topLeftMargin.x + children[i].border.x + children[i].padding.x, currentY);
+                currentX += children[i].contentSize.x + children[i].topLeftMargin.x + children[i].bottomRightMargin.x;
+                maxLineHeight = std::max(maxLineHeight, children[i].contentSize.y);
+            }
         }
+        currentY += maxLineHeight;
+    }
+    if (HasStyle("display") && std::get<string>(style["display"]) == "inline")
+    {
+        if (contentSize.x == 0) contentSize.x = currentX;
     }
     contentSize.y = currentY;
 
@@ -195,14 +268,15 @@ void Node::CaculatePosition(float parentWidth, Website&  website)
         {
             PImage* image = &it->second;
             contentSize.y += ImVec2((float)image->width, (float)image->height).y;
-            return;
         }
     }
     if (type == "#text" && attributes.find("text") != attributes.end())
     {
         const char* text = attributes.at("text").c_str();
         float fontSize = GetFontSize(style);
-        contentSize.y += (ImGui::CalcTextSize(text) * (fontSize / 20)).y;
+        ImVec2 textSize = (ImGui::CalcTextSize(text) * (fontSize / 20));
+        contentSize.y += textSize.y;
+        if (parentWidth == 0) contentSize.x = textSize.x;
     }
 }
 void Node::CaculateContentSize()

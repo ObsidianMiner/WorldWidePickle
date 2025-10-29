@@ -22,7 +22,7 @@ public:
 	std::string url;
 	std::string content;
 	std::string rawTextVersion;
-	std::atomic<std::shared_ptr<std::vector<Node*>>> nodes;
+	std::atomic<std::shared_ptr<std::vector<Node>>> nodes;
 	std::unordered_map<std::string, PImage> images;
 	std::unordered_map<std::string, std::unordered_map<std::string, RuleValue>> styles;
 	bool loaded;
@@ -37,7 +37,7 @@ public:
 	/// Getsa a copy of the nodes. Parent pointers are broken though and still point to the original tree!
 	/// </summary>
 	/// <returns></returns>
-	std::shared_ptr<std::vector<Node*>> ReadNodes() { return std::make_shared<std::vector<Node*>>(*nodes.load()); }
+	std::shared_ptr<std::vector<Node>> ReadNodes() { return std::make_shared<std::vector<Node>>(*nodes.load()); }
 
 	Website(std::string url, Tab* tab);
 	~Website();

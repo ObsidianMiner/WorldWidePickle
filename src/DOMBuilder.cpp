@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "DOM.h"
 #include "ImMath.h"
+#include "StringUtils.h"
 
 using namespace std;
 
@@ -50,7 +51,7 @@ inline void DOMBuilder::StartTag()
     buildingNode->parent = currentContext;
     currentContext = buildingNode;
 }
-std::string trim(const std::string& str) {
+std::string Trim(const std::string& str) {
     auto is_not_space = [](unsigned char ch) {
         return !std::isspace(ch);
         };
@@ -61,7 +62,6 @@ std::string trim(const std::string& str) {
     auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
     return std::string(begin, end);
 }
-
 inline void DOMBuilder::EndTag()
 {
     AddAttributeOrType();
@@ -93,7 +93,7 @@ inline void DOMBuilder::EndTag()
 
                 if (parents[i]->children.size() == 0)
                 {
-                    std::string innerText = trim(htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1)));
+                    std::string innerText = Trim(htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1)));
                     if (innerText.length() > 0)
                     {
                         parents[i]->children.emplace_back();

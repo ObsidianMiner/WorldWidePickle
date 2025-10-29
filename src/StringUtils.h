@@ -7,7 +7,7 @@
 #undef min
 #undef max
 
- 
+
 
 inline bool TryCastToInt(std::string s, int& result) {  
 	if (s[s.size() - 1] == 'x' && s[s.size() - 2] == 'p') s.resize(s.size() - 2); // Remove 'px' suffix if present  
@@ -51,3 +51,4 @@ inline bool TryCastToFloat(std::string& s, float& result) {
 	result = static_cast<float>(val);  
 	return true;  
 }
+

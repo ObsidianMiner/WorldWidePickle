@@ -41,7 +41,14 @@ void Node::LoadReferences(Website& website)
 				string csstxt = GetTextFromURL(realURL);
                 CSSBuilder builder(csstxt);
                 for (auto& [selector, declarations] : builder.ParseCSS()) {
-                    website.styles.insert_or_assign(selector, declarations);
+                    if (website.styles.contains(selector))
+                    {
+                        website.styles[selector].insert(declarations.begin(), declarations.end());
+                    }
+                    else
+                    {
+                        website.styles.insert_or_assign(selector, declarations);
+                    }
                 }
 				cout << "Loaded CSS from " << realURL << endl;
             }
@@ -104,12 +111,22 @@ void Node::UpdateStyle(const Website& website, const std::unordered_map<std::str
             style.insert_or_assign(propertyName, value);
         }
     }
+    vector<string> classList;
+    
     if (attributes.find("class") != attributes.end())
     {
         string selector = '.' + attributes["class"];
         if (website.styles.find(selector) != website.styles.end())
         {
-            cout << "Found Style: " << selector;
+            for (const auto& [propertyName, value] : website.styles.at(selector)) {
+                style.insert_or_assign(propertyName, value);
+            }
+        }
+        selector = selector + " " + type;
+
+        if (website.styles.find(selector) != website.styles.end())
+        {
+            cout << "Has Selector: " << selector << endl;
             for (const auto& [propertyName, value] : website.styles.at(selector)) {
                 style.insert_or_assign(propertyName, value);
             }

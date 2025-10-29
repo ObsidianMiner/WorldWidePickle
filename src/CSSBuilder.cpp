@@ -1,25 +1,25 @@
 #include <iostream>
 #include "DOM.h"
 #include "CSSBuilder.h"
-#include "StringCasting.h"
+#include "StringUtils.h"
 
 using namespace std;
 
 unordered_map<string, unordered_map<string, RuleValue>> globalStyles;
 
 std::unordered_map<std::string, ImU32> colors = {
-    {"black", IM_COL32(0, 0, 0, 255)},
-    {"white", IM_COL32(255, 255, 255, 255)},
-    {"red", IM_COL32(255, 0, 0, 255)},
-    {"green", IM_COL32(0, 255, 0, 255)},
-    {"blue", IM_COL32(0, 0, 255, 255)},
-    {"yellow", IM_COL32(255, 255, 0, 255)},
-    {"cyan", IM_COL32(0, 255, 255, 255)},
-    {"magenta", IM_COL32(255, 0, 255, 255)},
-    {"gray", IM_COL32(128, 128, 128, 255)},
-    {"grey", IM_COL32(128, 128, 128, 255)},
-    {"LightSeaGreen", IM_COL32(32, 178, 170, 255)},
-    {"transparent", IM_COL32(0, 0, 0, 0)}
+   {"black", IM_COL32(0, 0, 0, 255)},
+   {"white", IM_COL32(255, 255, 255, 255)},
+   {"red", IM_COL32(255, 0, 0, 255)},
+   {"green", IM_COL32(0, 255, 0, 255)},
+   {"blue", IM_COL32(0, 0, 255, 255)},
+   {"yellow", IM_COL32(255, 255, 0, 255)},
+   {"cyan", IM_COL32(0, 255, 255, 255)},
+   {"magenta", IM_COL32(255, 0, 255, 255)},
+   {"gray", IM_COL32(128, 128, 128, 255)},
+   {"grey", IM_COL32(128, 128, 128, 255)},
+   {"LightSeaGreen", IM_COL32(32, 178, 170, 255)},
+   {"transparent", IM_COL32(0, 0, 0, 0)}
 };
 
 bool TryCastToColor(const std::string& s, ImU32& result)
@@ -58,7 +58,19 @@ string stripBlockComments(const string& input) {
     }
     return result;
 }
-
+unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector()
+{
+    while (pointer < css.size())
+    {
+        if (css[pointer] == '@') inUnsupported = true;
+        if (css[pointer] == ';' && !(inUnsupported || inComment))
+        {
+            ParseComponent();
+        }
+        pointer++;
+    }
+    
+}
 unordered_map<string, unordered_map<string, RuleValue>> CSSBuilder::ParseCSS()
 {
     unordered_map<string, unordered_map<string, RuleValue>> styles;
@@ -67,11 +79,11 @@ unordered_map<string, unordered_map<string, RuleValue>> CSSBuilder::ParseCSS()
         cout << "Not valid CSS" << endl;
         return styles;
     }
-    css.erase(
+    /*css.erase(
         std::remove_if(css.begin(), css.end(),
             [](unsigned char c) { return std::isspace(c); }),
         css.end()
-    );
+    );*/
     css = stripBlockComments(css);
 
     while (pointer < css.size())
@@ -107,15 +119,32 @@ string CSSBuilder::CSSString(const unordered_map<string, unordered_map<string, R
             if (std::holds_alternative<string>(component.second)) result += '\t' + component.first + ":" + get<string>(component.second) + "\n";
             if (std::holds_alternative<int>(component.second))result += '\t' + component.first + ":" + to_string(get<int>(component.second)) + "   { int } " + "\n";
             if (std::holds_alternative<float>(component.second))result += '\t' + component.first + ":" + to_string(get<float>(component.second)) + "   { float } " + "\n";
-            if (std::holds_alternative<ImU32>(component.second))result += '\t' + component.first + ":" + to_string(get<ImU32>(component.second)) + "   { color } " + "\n";
+            if (std::holds_alternative<ImU32>(component.second))
+            {
+                ImU32 col = get<ImU32>(component.second);
+                string r = to_string((int)((float)((col >> 0) & 0xFF)));
+                string g = to_string((int)((float)((col >> 8) & 0xFF)));
+                string b = to_string((int)((float)((col >> 16) & 0xFF)));
+                result += '\t' + component.first + ":" + " r:" + r + " g:" + g + " b:" + b + "   { color } " + "\n";
+            }
         }
     }
     return result;
 }
+std::string TrimStr(const std::string& str) {
+    auto is_not_space = [](unsigned char ch) {
+        return !std::isspace(ch);
+        };
 
+    auto begin = std::find_if(str.begin(), str.end(), is_not_space);
+    if (begin == str.end()) return ""; // All whitespace
+
+    auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
+    return std::string(begin, end);
+}
 void CSSBuilder::StartSelector()
 {
-    selector = css.substr(componentStart, pointer - componentStart);
+    selector = TrimStr(css.substr(componentStart, pointer - componentStart));
     inSel = true;
     componentStart = pointer + 1;
 #ifdef INDETPH_CSS_DEBUG
@@ -136,11 +165,14 @@ void CSSBuilder::EndSelector(unordered_map<string, unordered_map<string, RuleVal
     cout << "Selector Complete: " << selector << endl;
 #endif
     selector = "";
+    buildingStyleComponents.clear();
 }
-
+void CSSBuilder::ParseComponentBase(RuleValue& component)
+{
+    
+}
 void CSSBuilder::ParseComponent()
 {
-    buildingStyleComponents.clear();
     if (!inSel) cout << "; found outside requirement" << endl;
     else
     {
@@ -148,11 +180,11 @@ void CSSBuilder::ParseComponent()
         if (colonLoc == string::npos || colonLoc > pointer) cout << "No colon found for property" << endl;
         else
         {
-            string property = css.substr(componentStart, colonLoc - componentStart);
-            string value = css.substr(colonLoc + 1, pointer - (colonLoc + 1));
+            string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));
+            string value = TrimStr(css.substr(colonLoc + 1, pointer - (colonLoc + 1)));
             int valueInt = 0;
             float valueFloat = 0.0f;
-			ImU32 valueCol = 0;
+            ImU32 valueCol = 0;
             if (TryCastToInt(value, valueInt))
             {
                 buildingStyleComponents[property] = valueInt;
@@ -164,7 +196,7 @@ void CSSBuilder::ParseComponent()
             else if (TryCastToColor(value, valueCol))
             {
                 buildingStyleComponents[property] = valueCol;
-			}
+            }
             else
             {
                 buildingStyleComponents[property] = value;

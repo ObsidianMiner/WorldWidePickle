@@ -122,7 +122,7 @@
     <ClInclude Include="src\DOMBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\StringCasting.h">
+    <ClInclude Include="src\StringUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
