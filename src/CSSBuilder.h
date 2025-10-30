@@ -9,7 +9,7 @@ class CSSBuilder
 {
 public:
 	string css;
-	unordered_map<string, RuleValue> ParseSingleSelector();
+	static unordered_map<string, RuleValue> ParseSingleSelector(string css);
 	unordered_map<string, unordered_map<string, RuleValue>> ParseCSS();
 	static string CSSString(const unordered_map<string, unordered_map<string, RuleValue>>& styles);
 	CSSBuilder(string css) : css(css), pointer(0), componentStart(0), inSel(false), inUnsupported(false), inComment(false) {}
@@ -23,7 +23,6 @@ private:
 	unordered_map<string, RuleValue> buildingStyleComponents;
 	void StartSelector();
 	void ParseComponent();
-	void ParseComponentWithoutSelector();
 	void EndSelector(unordered_map<string, unordered_map<string, RuleValue>>& styles);
-	void ParseComponentBase(RuleValue& component);
+	static void ParseValue(RuleValue& component, string value);
 };

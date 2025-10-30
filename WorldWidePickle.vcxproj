@@ -154,6 +154,7 @@
     <ClCompile Include="src\ReferenceLoading.cpp" />
     <ClCompile Include="src\Tab.cpp" />
     <ClCompile Include="src\Topbar.cpp" />
+    <ClCompile Include="src\UpdateNodeStyle.cpp" />
     <ClCompile Include="src\Website.cpp" />
     <ClCompile Include="src\WorldWidePickle.cpp" />
   </ItemGroup>

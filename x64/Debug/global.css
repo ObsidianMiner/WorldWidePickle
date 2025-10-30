@@ -10,3 +10,4 @@ a { color: LightSeaGreen; display:inline; }
 br {display: inline;}
 span {display: inline;}
 nobr { white-space: nowrap;}
+center { margin: auto}

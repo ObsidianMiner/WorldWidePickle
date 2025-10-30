@@ -58,19 +58,6 @@ string stripBlockComments(const string& input) {
     }
     return result;
 }
-unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector()
-{
-    while (pointer < css.size())
-    {
-        if (css[pointer] == '@') inUnsupported = true;
-        if (css[pointer] == ';' && !(inUnsupported || inComment))
-        {
-            ParseComponent();
-        }
-        pointer++;
-    }
-    
-}
 unordered_map<string, unordered_map<string, RuleValue>> CSSBuilder::ParseCSS()
 {
     unordered_map<string, unordered_map<string, RuleValue>> styles;
@@ -167,9 +154,57 @@ void CSSBuilder::EndSelector(unordered_map<string, unordered_map<string, RuleVal
     selector = "";
     buildingStyleComponents.clear();
 }
-void CSSBuilder::ParseComponentBase(RuleValue& component)
+unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector(string css)
 {
-    
+    unordered_map<string, RuleValue> style;
+
+    int pointer = 0;
+    bool inUnsupported = false;
+    int componentStart = 0;
+    while (pointer < css.size())
+    {
+        if (css[pointer] == '@') inUnsupported = true;
+        if (css[pointer] == ';' && !(inUnsupported))
+        {
+            int colonLoc = css.find(':', componentStart);
+            if (colonLoc == string::npos || colonLoc > pointer) cout << "No colon found for property" << endl;
+            else
+            {
+                string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));
+                string value = TrimStr(css.substr(colonLoc + 1, pointer - (colonLoc + 1)));
+                ParseValue(style[property], value);
+            }
+            componentStart = pointer + 1;
+        }
+        pointer++;
+    }
+
+    return unordered_map<string, RuleValue>();
+}
+void CSSBuilder::ParseValue(RuleValue& component, string value)
+{
+    int valueInt = 0;
+    float valueFloat = 0.0f;
+    ImU32 valueCol = 0;
+    if (TryCastToInt(value, valueInt))
+    {
+        component = valueInt;
+    }
+    else if (TryCastToFloat(value, valueFloat))
+    {
+        component = valueFloat;
+    }
+    else if (TryCastToColor(value, valueCol))
+    {
+        component = valueCol;
+    }
+    else
+    {
+        component = value;
+    }
+#ifdef INDETPH_CSS_DEBUG
+    cout << "found component " << property << " with value " << value << endl;
+#endif
 }
 void CSSBuilder::ParseComponent()
 {
@@ -182,29 +217,8 @@ void CSSBuilder::ParseComponent()
         {
             string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));
             string value = TrimStr(css.substr(colonLoc + 1, pointer - (colonLoc + 1)));
-            int valueInt = 0;
-            float valueFloat = 0.0f;
-            ImU32 valueCol = 0;
-            if (TryCastToInt(value, valueInt))
-            {
-                buildingStyleComponents[property] = valueInt;
-            }
-            else if (TryCastToFloat(value, valueFloat))
-            {
-                buildingStyleComponents[property] = valueFloat;
-            }
-            else if (TryCastToColor(value, valueCol))
-            {
-                buildingStyleComponents[property] = valueCol;
-            }
-            else
-            {
-                buildingStyleComponents[property] = value;
-            }
+            ParseValue(buildingStyleComponents[property], value);
             componentStart = pointer + 1;
-#ifdef INDETPH_CSS_DEBUG
-            cout << "found component " << property << " with value " << value << endl;
-#endif
         }
     }
 }
