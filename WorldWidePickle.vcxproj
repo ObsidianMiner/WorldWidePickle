@@ -150,6 +150,7 @@
     <ClCompile Include="src\DOMBuilder.cpp" />
     <ClCompile Include="src\DOMRender.cpp" />
     <ClCompile Include="src\Fetch.cpp" />
+    <ClCompile Include="src\NodePositioning.cpp" />
     <ClCompile Include="src\PickleGUI.cpp" />
     <ClCompile Include="src\ReferenceLoading.cpp" />
     <ClCompile Include="src\Tab.cpp" />

@@ -52,3 +52,13 @@ inline bool TryCastToFloat(std::string& s, float& result) {
 	return true;  
 }
 
+inline float GetFontSize(std::unordered_map<std::string, RuleValue> style)
+{
+	float fS = 20.0f;
+	if (style.find("font-size") != style.end())
+	{
+		if (std::holds_alternative<int>(style["font-size"]))fS = std::get<int>(style["font-size"]);
+		else if (std::holds_alternative<float>(style["font-size"])) fS = std::get<float>(style["font-size"]);
+	}
+	return fS;
+}

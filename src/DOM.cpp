@@ -8,19 +8,34 @@
 
 using namespace std;
 
+#define DebugMargins
+#define DebugPos
 
-
-bool Node::HasAttribute(std::string attribute)
+bool Node::HasAttribute(const std::string attribute) const
 {
     return attributes.find(attribute) != attributes.end();
 }
-bool Node::HasStyle(std::string s)
+bool Node::HasStyle(const std::string s) const
 {
     return style.find(s) != style.end();
 }
+bool Node::HasAutoMargin()
+{
+    return HasStyle("margin") && std::holds_alternative<string>(style["margin"]) && std::get<string>(style["margin"]) == "auto";
+}
+
+float Node::GetStyleFloat(const std::string& key, float defaultValue) const
+{
+    if (!HasStyle(key)) return defaultValue;
+
+    const auto& val = style.at(key);
+    if (std::holds_alternative<int>(val)) return static_cast<float>(std::get<int>(val));
+    if (std::holds_alternative<float>(val)) return std::get<float>(val);
+    return defaultValue;
+}
 
 
-ImVec2 Node::GlobalPos()
+ImVec2 Node::GlobalPos() const
 {
     if (parent != nullptr) return localPos + parent->GlobalPos();
     return localPos;
@@ -51,11 +66,19 @@ string AttributesToString(const unordered_map<string, string> attributes)
 }
 string PrintNode(Node* node, int indent)
 {
-    string output;
+    string output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes);
+#ifdef DebugPos
     string globalPos = " | GPos: " + to_string(int(node->GlobalPos().x)) + ' ' + to_string(int(node->GlobalPos().y));
     string localPos = "         | LPos: " + to_string(int(node->localPos.x)) + ' ' + to_string(int(node->localPos.y));
+    output += localPos + globalPos;
+#endif
+#ifdef DebugMargins
+    string margins = " | Margins L: " + to_string(int(node->topLeftMargin.x)) + " R: " + to_string(int(node->bottomRightMargin.x))
+        + " T: " + to_string(int(node->topLeftMargin.y)) + " B: " + to_string(int(node->bottomRightMargin.y));
+    output += margins;
+#endif
     string contentSize = " | CS: " + to_string(int(node->contentSize.x)) + ' ' + to_string(int(node->contentSize.y));
-    output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes) + localPos + globalPos + contentSize + "\n";
+    output += contentSize + "\n";
     for (size_t i = 0; i < node->children.size(); i++)
     {
         output += PrintNode(&node->children[i], indent + 1);

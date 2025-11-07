@@ -17,6 +17,7 @@ private:
 	bool insideTag = false;
 	bool inClosingTag = false;
 	bool readingAttribute = false;
+	bool readingCDATA = false;
 	std::vector<Node> rootNodes;
 	Node* currentContext = nullptr;
 	Node* buildingNode = nullptr;

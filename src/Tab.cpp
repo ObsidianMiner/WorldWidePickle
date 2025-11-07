@@ -5,6 +5,7 @@
 #include <iostream>
 #include "CSSBuilder.h"
 #include <imgui/imgui_internal.h>
+#include "ImMath.h"
 
 std::vector<Tab> tabs;
 int maxTabID = 0;
@@ -93,7 +94,7 @@ void Tab::OnResize()
         std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
         for (size_t i = 0; i < (*domSnapshot).size(); i++)
         {
-            (*domSnapshot)[i].CaculatePosition(contentSize.x, *currentPage);
+            (*domSnapshot)[i].CalculatePosition(contentSize.x, *currentPage);
 		}
         currentPage->nodes.store(domSnapshot);
     }
@@ -212,7 +213,7 @@ void Tab::DisplayPage()
     std::multimap<int, std::function<void(ImDrawList*)>> draw_queue;
     std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
 
-    contentPos = ImGui::GetCursorPos();
+    contentPos = ImGui::GetCursorPos() + ImVec2(0, 20);
 
     /*
     for (size_t i = 0; i < (*domSnapshot).size(); i++)

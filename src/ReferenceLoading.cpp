@@ -54,6 +54,21 @@ void Node::LoadReferences(Website& website)
             }
         }
     }
+    else if (type == "style" && HasAttribute("CDATA"))
+    {
+        CSSBuilder builder(attributes["CDATA"]);
+        for (auto& [selector, declarations] : builder.ParseCSS()) {
+            if (website.styles.contains(selector))
+            {
+                website.styles[selector].insert(declarations.begin(), declarations.end());
+            }
+            else
+            {
+                website.styles.insert_or_assign(selector, declarations);
+            }
+        }
+        cout << "Loaded CSS from style element" << endl;
+    }
     for (size_t i = 0; i < children.size(); i++)
     {
         children[i].LoadReferences(website);

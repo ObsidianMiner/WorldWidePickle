@@ -147,17 +147,36 @@ std::vector<Node> DOMBuilder::ParseNodes()
 {
     while (pointer < htmlContent.length())
     {
-        if (htmlContent[pointer] == '<')
+        if (readingCDATA)
         {
-            StartTag();
+            if (htmlContent[pointer] == '>' && htmlContent[pointer - 1] == ']')
+            {
+                readingCDATA = false;
+
+                string CDATAContent = htmlContent.substr(lastStartTagPos, pointer - lastStartTagPos - 1);
+                currentContext->attributes.emplace("CDATA", CDATAContent);
+                lastEndTagPos = pointer;
+            }
         }
-        else if (htmlContent[pointer] == ' ' && insideTag)
+        else
         {
-            AddAttributeOrType();
-        }
-        else if (htmlContent[pointer] == '>' && buildingNode != nullptr)
-        {
-            EndTag();
+            if (htmlContent[pointer] == '<')
+            {
+                if (htmlContent[pointer + 1] == '!')
+                {
+                    readingCDATA = true;
+                    lastStartTagPos = pointer + 14;
+                }
+                else StartTag();
+            }
+            else if (htmlContent[pointer] == ' ' && (!readingAttribute || htmlContent[pointer - 1] == '"') && insideTag)
+            {
+                AddAttributeOrType();
+            }
+            else if (htmlContent[pointer] == '>' && buildingNode != nullptr)
+            {
+                EndTag();
+            }
         }
 
         pointer++;

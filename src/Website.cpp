@@ -74,7 +74,7 @@ void Website::StyleNodes()
     }
     for (Node& node : *styledNodes)
     {
-        node.CaculatePosition(tab->contentSize.x, *this);
+        node.CalculatePosition(tab->contentSize.x, *this);
     }
     FixParentPointers(*styledNodes, nullptr);
     nodes.store(styledNodes);

@@ -179,7 +179,7 @@ unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector(string css)
         pointer++;
     }
 
-    return unordered_map<string, RuleValue>();
+    return style;
 }
 void CSSBuilder::ParseValue(RuleValue& component, string value)
 {
