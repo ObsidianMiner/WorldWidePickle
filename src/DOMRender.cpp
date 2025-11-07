@@ -152,9 +152,9 @@ inline void Node::RenderTextElement(std::multimap<int, std::function<void(ImDraw
     std::string text = attributes.at("text");
     if (style.find("color") != style.end() && std::holds_alternative<ImU32>(style["color"]))
     {
-		color = std::get<ImU32>(style["color"]);
+        color = std::get<ImU32>(style["color"]);
     }
-	RenderText(queue, layer, text, color, fontSize);
+    RenderText(queue, layer, text, color, fontSize);
 }
 inline void Node::RenderContents(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
 {
@@ -169,11 +169,11 @@ inline void Node::RenderContents(std::multimap<int, std::function<void(ImDrawLis
     }
 }
 
-void Node::CaculatePosition(float parentWidth, Website&  website)
+void Node::CaculatePosition(float parentWidth, Website& website)
 {
     contentSize = ImVec2(parentWidth, 0);
     if (HasStyle("padding")) padding = ImVec2(std::get<int>(style["padding"]), std::get<int>(style["padding"]));
-    if(HasStyle("margin"))
+    if (HasStyle("margin"))
     {
         if (std::holds_alternative<int>(style["margin"]))
         {
@@ -185,7 +185,7 @@ void Node::CaculatePosition(float parentWidth, Website&  website)
             topLeftMargin = ImVec2(std::get<float>(style["margin"]), std::get<float>(style["margin"]));
             bottomRightMargin = ImVec2(std::get<float>(style["margin"]), std::get<float>(style["margin"]));
         }
-	}
+    }
     if (HasStyle("margin-left"))
     {
         if (std::holds_alternative<int>(style["margin-left"]))
@@ -208,14 +208,23 @@ void Node::CaculatePosition(float parentWidth, Website&  website)
             bottomRightMargin.x = std::get<float>(style["margin-right"]);
         }
     }
-    
+
 
     float currentY = 0;
     float currentX = 0;
     float maxLineHeight = 0;
     bool wasBlock = false;
+    vector<Node*> autoMarginedChildren;
     if (children.size() > 0)
     {
+        for (size_t i = 0; i < children.size(); i++)
+        {
+            children[i].CaculatePosition(parentWidth, website);
+            if (children[i].HasStyle("margin") && std::holds_alternative<string>(children[i].style["margin"]))
+            {
+                
+            }
+		}
         for (size_t i = 0; i < children.size(); i++)
         {
 
@@ -228,7 +237,6 @@ void Node::CaculatePosition(float parentWidth, Website&  website)
             if (blockDisplay)
             {
                 wasBlock = true;
-                children[i].CaculatePosition(parentWidth, website);
                 if (maxLineHeight > 0)
                 {
                     currentY += maxLineHeight;
