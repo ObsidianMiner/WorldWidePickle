@@ -46,3 +46,5 @@
 *.ipdb
 *.iobj
 *.tlog
+
+/docs

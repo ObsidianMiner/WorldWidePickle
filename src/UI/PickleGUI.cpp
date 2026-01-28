@@ -1,3 +1,7 @@
+/**
+* @file ReferenceLoading.cpp
+* @brief An interface for imgui specificly for WorldWidePickle
+*/
 
 #include "PickleGUI.h"
 #include <iostream>
@@ -89,7 +93,7 @@ PGUI::PGUI()
     //style.FontSizeBase = 20.0f;
     
     io->Fonts->AddFontDefault();
-    ImFont* font = io->Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf");
+    ImFont* font = io->Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 22.0f);
     IM_ASSERT(font != nullptr);
     io->FontDefault = font;
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf");

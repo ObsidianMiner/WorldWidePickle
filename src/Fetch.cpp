@@ -6,7 +6,7 @@
 #include <d3d10.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
-#include "PickleGUI.h"
+#include "UI/PickleGUI.h"
 
 
 using namespace std;

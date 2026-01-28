@@ -10,6 +10,7 @@ private:
 	void StartTag();
 	void AddAttributeOrType();
 	void EndTag();
+	void EndCDATA();
 	const std::string& htmlContent;
 	int pointer = 0;
 	int buildingNodeStart = 0;

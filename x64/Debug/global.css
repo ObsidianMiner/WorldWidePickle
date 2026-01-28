@@ -7,7 +7,8 @@ h5 { font-size : 13px; }
 h6 { font-size : 10px; }
 br { padding : 8px; }
 a { color: LightSeaGreen; display:inline; }
+#text{display:inline;}
 br {display: inline;}
 span {display: inline;}
 nobr { white-space: nowrap;}
-center { margin: auto}
+center { margin: auto; text-align: center;}

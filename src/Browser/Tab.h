@@ -15,6 +15,7 @@ public:
 
 	ImVec2 contentSize;
 	ImVec2 contentPos;
+	ImVec2 contentScreenPos;
 
 	Tab(string url);
 	void Render();
@@ -32,6 +33,7 @@ private:
 	ImGuiID dockID;
 
 	bool attemptingToLoadNewPage;
+	bool attemptingToLoadFromHistory;
 	vector<string> urlHistory;
 	void SetupDocking();
 	void OnResize();

@@ -1,6 +1,5 @@
 #include "Topbar.h"
-#include "WWP.h"
-#include "PickleGUI.h"
+#include "UI/PickleGUI.h"
 #include "Tab.h"
 #include <imgui/imgui_internal.h>
 

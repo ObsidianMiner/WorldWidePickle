@@ -27,6 +27,7 @@ public:
 	ImVec2 bottomRightMargin;
 	ImVec2 border;
 	ImVec2 padding;
+	float posInLine;
 
 	Node* parent = nullptr;
 	std::vector<Node> children;
@@ -36,7 +37,7 @@ public:
 
 	void Render(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
 	void LoadReferences(Website& website);
-	void CalculatePosition(float parentWidth, Website& website);
+	void CalculateChildPositions(float parentWidth, Website& website);
 	void UpdateStyle(const Website& website, const std::unordered_map<std::string, RuleValue>& inheritedStyle);
 	bool operator==(const Node& other)
 	{
@@ -52,13 +53,17 @@ private:
 	void RenderTextElement(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
 	inline void RenderContents(std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer);
 
-
+	//Layout
 	void CaculateContentSize(float parentWidth, Website& website);
 	void SetMargins();
 	bool HasAutoMargin();
 	void CalculateChildrenPositions(float parentWidth, Website& website);
 	void CalculateChildrenPositionsFlex(Website& website);
+	void WrapSelf(float parentWidth, float& currentX, float& currentY);
 	void CalculateChildrenAutoMargins(float parentWidth, Website& website);
+
+	//Drawing
+	void DrawInput();
 };
 std::vector<Node> ParseNodes(const std::string& htmlContent);
 

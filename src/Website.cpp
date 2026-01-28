@@ -1,12 +1,16 @@
+/**
+* @file Website.cpp
+* @brief Holds a website including the url, content, source, and other data a tab might want.
+*/
+
 #include "Website.h"
 #include <thread>
 #include <iostream>
 #include <regex>
-#include "PickleGUI.h"
-#include "CSSBuilder.h"
+#include "UI/PickleGUI.h"
+#include "CSS/CSSBuilder.h"
 #include <tidy/tidybuffio.h>
-#include "CSSBuilder.h"
-#include "Tab.h"
+#include "Browser/Tab.h"
 
 
 Website::Website(std::string url, Tab* tab)
@@ -17,7 +21,7 @@ Website::Website(std::string url, Tab* tab)
     this->tab = tab;
     name = url;
     content = "<h1>Loading...</h1>";
-	rawTextVersion = "<h1>Loading...</h1>";
+	websiteSource = "<h1>Loading...</h1>";
     styles = globalStyles;
     nodes = std::make_shared<std::vector<Node>>();
 	std::thread(&Website::FetchContent, this).detach();
@@ -42,28 +46,37 @@ void FixParentPointers(std::vector<Node>& nodes, Node* parent)
         FixParentPointers(node.children, &node);
     }
 }
+/// <summary>
+/// Ran in a seperate thread, to fetch, source -> nodes -> references (img/css/js/ect.) -> Styles Page
+/// </summary>
 void Website::FetchContent()
 {
+    //Source
     std::cout << "Fetching URL:" << url << std::endl;
     content = GetTextFromFileOrURL(url, true);
 	CreateRawTextVersion();
     std::cout << "Fetched HTML from" << url << std::endl;
+    //Nodes
     auto parsedNodes = std::make_shared<std::vector<Node>>(ParseNodes(content));
 	FixParentPointers(*parsedNodes, nullptr);
     
 	nodes.store(parsedNodes);
     
+    //References (img/css/js/ect.)
     for (Node& node : *parsedNodes)
     {
         node.LoadReferences(*this);
     }
+    //Style Page
     StyleNodes();
     interpretedDOM = PrintDOM(*ReadNodes());
     interpretedCSS = CSSBuilder::CSSString(styles);
 	std::cout << "Finished fetching URL:" << url << std::endl;
     loaded = true;
 }
-//Should be called on a duplicate DOM so the main thread can keep rendering, and then swaped afterward
+/// <summary>
+/// Creates a duplicate DOM makes style changes, and then sets the DOM to the new DOM
+/// </summary>
 void Website::StyleNodes()
 {
     auto styledNodes = ReadNodes();
@@ -74,7 +87,7 @@ void Website::StyleNodes()
     }
     for (Node& node : *styledNodes)
     {
-        node.CalculatePosition(tab->contentSize.x, *this);
+        node.CalculateChildPositions(tab->contentSize.x, *this);
     }
     FixParentPointers(*styledNodes, nullptr);
     nodes.store(styledNodes);
@@ -82,7 +95,7 @@ void Website::StyleNodes()
 
 std::string StripHiddenTags(const std::string& html)
 {
-    std::regex multiTagRegex(R"(<(header|nav|footer|head|style|script)\b[^>]*?>[\s\S]*?<\/\1>)", std::regex::icase);
+    std::regex multiTagRegex(R"(<(header|head|nav|footer|head|style|script)\b[^>]*?>[\s\S]*?<\/\1>)", std::regex::icase);
     std::string result = html;
     std::string old;
 
@@ -161,7 +174,7 @@ void Website::CreateRawTextVersion()
 	content = TidyFormat(content);
     content = RemoveHtmlComments(content);
     content = RemoveDoctype(content);
-    rawTextVersion = content;
+    websiteSource = content;
     //rawTextVersion = stripHiddenTags(rawTextVersion);
     //rawTextVersion = removeOuterHtmlTag(rawTextVersion);
     //rawTextVersion = tidyFormat(rawTextVersion);

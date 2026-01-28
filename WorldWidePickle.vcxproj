@@ -108,7 +108,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)/Libraries/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Libraries/include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -127,7 +127,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)/Libraries/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Libraries/include;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -145,19 +145,21 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\CSSBuilder.cpp" />
+    <ClCompile Include="src\Browser\Browser.cpp" />
+    <ClCompile Include="src\CSS\CSSBuilder.cpp" />
     <ClCompile Include="src\DOM.cpp" />
     <ClCompile Include="src\DOMBuilder.cpp" />
     <ClCompile Include="src\DOMRender.cpp" />
     <ClCompile Include="src\Fetch.cpp" />
     <ClCompile Include="src\NodePositioning.cpp" />
-    <ClCompile Include="src\PickleGUI.cpp" />
+    <ClCompile Include="src\UI\PickleGUI.cpp" />
     <ClCompile Include="src\ReferenceLoading.cpp" />
-    <ClCompile Include="src\Tab.cpp" />
-    <ClCompile Include="src\Topbar.cpp" />
-    <ClCompile Include="src\UpdateNodeStyle.cpp" />
+    <ClCompile Include="src\Browser\Tab.cpp" />
+    <ClCompile Include="src\Browser\Topbar.cpp" />
+    <ClCompile Include="src\CSS\UpdateNodeStyle.cpp" />
     <ClCompile Include="src\Website.cpp" />
-    <ClCompile Include="src\WorldWidePickle.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\WWPStyles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\backends\imgui_impl_dx10.h" />
@@ -168,16 +170,17 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
-    <ClInclude Include="src\CSSBuilder.h" />
+    <ClInclude Include="src\Browser\Browser.h" />
+    <ClInclude Include="src\CSS\CSSBuilder.h" />
     <ClInclude Include="src\DOM.h" />
     <ClInclude Include="src\DOMBuilder.h" />
-    <ClInclude Include="src\ImMath.h" />
-    <ClInclude Include="src\PickleGUI.h" />
-    <ClInclude Include="src\StringUtils.h" />
-    <ClInclude Include="src\Tab.h" />
-    <ClInclude Include="src\Topbar.h" />
+    <ClInclude Include="src\Util\ImMath.h" />
+    <ClInclude Include="src\UI\PickleGUI.h" />
+    <ClInclude Include="src\Util\StringUtils.h" />
+    <ClInclude Include="src\Browser\Tab.h" />
+    <ClInclude Include="src\Browser\Topbar.h" />
     <ClInclude Include="src\Website.h" />
-    <ClInclude Include="src\WWP.h" />
+    <ClInclude Include="src\WWPStyles.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

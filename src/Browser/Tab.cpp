@@ -1,11 +1,16 @@
+/**
+* @file Tab.cpp
+* @brief The tab that is rendered to the user.
+*/
+
 #include "Tab.h"
-#include "PickleGUI.h"
+#include "UI/PickleGUI.h"
 #include <chrono>
 #include "../imgui/imgui.h"
 #include <iostream>
-#include "CSSBuilder.h"
+#include "CSS/CSSBuilder.h"
 #include <imgui/imgui_internal.h>
-#include "ImMath.h"
+#include "Util/ImMath.h"
 
 std::vector<Tab> tabs;
 int maxTabID = 0;
@@ -46,6 +51,7 @@ Tab::Tab(std::string url)
     waitingToClose = false;
     attemptingToLoadNewPage = false;
     firstFrame = true;
+    attemptingToLoadFromHistory = false;
 }
 void Tab::SetupDocking()
 {
@@ -94,7 +100,7 @@ void Tab::OnResize()
         std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
         for (size_t i = 0; i < (*domSnapshot).size(); i++)
         {
-            (*domSnapshot)[i].CalculatePosition(contentSize.x, *currentPage);
+            (*domSnapshot)[i].CalculateChildPositions(contentSize.x, *currentPage);
 		}
         currentPage->nodes.store(domSnapshot);
     }
@@ -124,13 +130,12 @@ void Tab::Render()
 
     if (attemptingToLoadNewPage && currentPage->loaded)
     {
-        urlHistory.push_back(currentURL);
+        if(!attemptingToLoadFromHistory) urlHistory.push_back(currentURL);
         currentURL = urlBuffer;
         currentPage = std::make_unique<Website>(urlBuffer, this);
         attemptingToLoadNewPage = false;
+        attemptingToLoadFromHistory = false;
     }
-    ImGui::SameLine();
-    if (ImGui::Button("Close Tab")) waitingToClose = true;
 
     if (currentPage->loaded && !currentPage->wasLoaded)
     {
@@ -183,30 +188,43 @@ void Tab::UpdateDocking()
 }
 void Tab::RenderURLBar()
 {
+    bool smallTopBar = winSize.x < 600;
+    float backButtonSize = (urlHistory.size() > 0 ? 45 : 0);
+    
     if (urlHistory.size() > 0 && ImGui::Button("Back"))
     {
         currentURL = urlHistory[urlHistory.size() - 1];
 		strncpy_s(urlBuffer, currentURL.c_str(), sizeof(urlBuffer) - 1);
         urlHistory.pop_back();
         attemptingToLoadNewPage = true;
+        attemptingToLoadFromHistory = true;
     }
     ImGui::SameLine();
+    ImGui::PushItemWidth(winSize.x - (smallTopBar ? 140 : 300) - backButtonSize);
     if (ImGui::InputText("URL", urlBuffer, IM_ARRAYSIZE(urlBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
     {
         ValidateURL(urlBuffer, sizeof(urlBuffer));
         attemptingToLoadNewPage = true;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Get Page"))
+    string getPageButtonText = "Get Page";
+    if (smallTopBar) getPageButtonText = "->";
+    if (ImGui::Button(getPageButtonText.c_str()))
     {
         ValidateURL(urlBuffer, sizeof(urlBuffer));
         attemptingToLoadNewPage = true;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Refresh"))
+    string refreshButtonText = "Refresh";
+    if (smallTopBar) refreshButtonText = "O";
+    if (ImGui::Button(refreshButtonText.c_str()))
     {
         attemptingToLoadNewPage = true;
     }
+    ImGui::SameLine();
+    string closeButtonText = "Close Tab";
+    if (smallTopBar) closeButtonText = "X";
+    if (ImGui::Button(closeButtonText.c_str())) waitingToClose = true;
 }
 void Tab::DisplayPage()
 {
@@ -214,6 +232,7 @@ void Tab::DisplayPage()
     std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
 
     contentPos = ImGui::GetCursorPos() + ImVec2(0, 20);
+    contentScreenPos = ImGui::GetCursorScreenPos() + ImVec2(0, 20);
 
     /*
     for (size_t i = 0; i < (*domSnapshot).size(); i++)
@@ -266,7 +285,7 @@ void Tab::DisplaySource()
     char name[256];
     std::snprintf(name, sizeof(name), "%s Source###Source %d", currentPage->name.c_str(), id);
     ImGui::Begin(name);
-    std::string* currentDisplayText = PGUI::io->KeyAlt ? &currentPage->content : &currentPage->rawTextVersion;
+    std::string* currentDisplayText = PGUI::io->KeyAlt ? &currentPage->content : &currentPage->websiteSource;
     ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
     ImGui::InputTextMultiline(
         "##LoadedPageSource",

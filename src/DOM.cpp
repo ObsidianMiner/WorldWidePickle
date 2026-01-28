@@ -1,10 +1,15 @@
+/**
+* @file DOMBuilder.cpp
+* @brief Basic node functions
+*/
+
 #include "DOMBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>
 #include <unordered_map>
 #include "DOM.h"
-#include "ImMath.h"
+#include "Util/ImMath.h"
 
 using namespace std;
 

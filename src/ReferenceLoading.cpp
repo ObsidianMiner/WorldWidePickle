@@ -1,6 +1,11 @@
+/**
+* @file ReferenceLoading.cpp
+* @brief Combination of Node::LoadReferences, and verifying url user input (for some reason).
+*/
+
 #include "DOM.h"
 #include "Website.h"
-#include "CSSBuilder.h"
+#include "CSS/CSSBuilder.h"
 #include <iostream>
 
 std::string GetRealURL(const std::string& possiblyRelativeURL, Website& website)

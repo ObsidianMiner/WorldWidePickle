@@ -21,7 +21,10 @@ public:
 	std::string name;
 	std::string url;
 	std::string content;
-	std::string rawTextVersion;
+	/// <summary>
+	/// Only ever used to diplay it in the debug popout.
+	/// </summary>
+	std::string websiteSource;
 	std::atomic<std::shared_ptr<std::vector<Node>>> nodes;
 	std::unordered_map<std::string, PImage> images;
 	std::unordered_map<std::string, std::unordered_map<std::string, RuleValue>> styles;

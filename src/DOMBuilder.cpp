@@ -1,11 +1,16 @@
+/**
+* @file DOMBuilder.cpp
+* @brief Builds a DOM from an HTML file
+*/
+
 #include "DOMBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>
 #include <unordered_map>
 #include "DOM.h"
-#include "ImMath.h"
-#include "StringUtils.h"
+#include "Util/ImMath.h"
+#include "Util/StringUtils.h"
 
 using namespace std;
 
@@ -29,6 +34,17 @@ inline void DOMBuilder::AddAttributeOrType()
         readingAttribute = true;
     }
 }
+std::string Trim(const std::string& str) {
+    auto is_not_space = [](unsigned char ch) {
+        return !std::isspace(ch);
+        };
+
+    auto begin = std::find_if(str.begin(), str.end(), is_not_space);
+    if (begin == str.end()) return ""; // All whitespace
+
+    auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
+    return std::string(begin, end);
+}
 inline void DOMBuilder::StartTag()
 {
     insideTag = true;
@@ -42,25 +58,27 @@ inline void DOMBuilder::StartTag()
     }
     else
     {
+        std::string innerText = Trim(htmlContent.substr(lastEndTagPos + 1, pointer - (lastEndTagPos + 1)));
+        if (innerText.length() > 0)
+        {
+            currentContext->children.emplace_back();
+            currentContext->children[currentContext->children.size() - 1].parent = currentContext;
+            currentContext->children[currentContext->children.size() - 1].type = "#text";
+            currentContext->children[currentContext->children.size() - 1].attributes.emplace(std::pair<std::string, std::string>{ "text", innerText });
+            currentContext->children[currentContext->children.size() - 1].id = highestID;
+            highestID++;
+        }
+
         currentContext->children.emplace_back();
         buildingNode = &currentContext->children[currentContext->children.size() - 1];
         buildingNode->id = highestID;
         highestID++;
+
+
         lastStartTagPos = pointer;
     }
     buildingNode->parent = currentContext;
     currentContext = buildingNode;
-}
-std::string Trim(const std::string& str) {
-    auto is_not_space = [](unsigned char ch) {
-        return !std::isspace(ch);
-        };
-
-    auto begin = std::find_if(str.begin(), str.end(), is_not_space);
-    if (begin == str.end()) return ""; // All whitespace
-
-    auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
-    return std::string(begin, end);
 }
 inline void DOMBuilder::EndTag()
 {
@@ -143,6 +161,14 @@ void ValidateNode(Node* node)
         }
     }
 }
+void DOMBuilder::EndCDATA()
+{
+    readingCDATA = false;
+
+    string CDATAContent = htmlContent.substr(lastStartTagPos, pointer - lastStartTagPos - 1);
+    currentContext->attributes.emplace("CDATA", CDATAContent);
+    lastEndTagPos = pointer;
+}
 std::vector<Node> DOMBuilder::ParseNodes()
 {
     while (pointer < htmlContent.length())
@@ -151,11 +177,7 @@ std::vector<Node> DOMBuilder::ParseNodes()
         {
             if (htmlContent[pointer] == '>' && htmlContent[pointer - 1] == ']')
             {
-                readingCDATA = false;
-
-                string CDATAContent = htmlContent.substr(lastStartTagPos, pointer - lastStartTagPos - 1);
-                currentContext->attributes.emplace("CDATA", CDATAContent);
-                lastEndTagPos = pointer;
+                EndCDATA();
             }
         }
         else

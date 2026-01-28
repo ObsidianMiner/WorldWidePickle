@@ -1,7 +1,12 @@
+/**
+* @file CSSBuilder.cpp
+* @brief Creates a style sheet in memory.
+*/
+
 #include <iostream>
 #include "DOM.h"
 #include "CSSBuilder.h"
-#include "StringUtils.h"
+#include "Util/StringUtils.h"
 
 using namespace std;
 
