@@ -3,7 +3,7 @@
 #include "Tab.h"
 #include "Topbar.h"
 #include "CSS/CSSBuilder.h"
-#include "WWPStyles.h"
+#include "UI/WWPStyles.h"
 #include "Browser.h"
 
 using namespace std::string_literals;

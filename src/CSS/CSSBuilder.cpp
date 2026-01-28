@@ -4,7 +4,7 @@
 */
 
 #include <iostream>
-#include "DOM.h"
+#include "Node.h"
 #include "CSSBuilder.h"
 #include "Util/StringUtils.h"
 

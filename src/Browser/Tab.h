@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "Website.h"
+#include <Rendering/DOMRenderer.h>
 using namespace std;
 
 extern char tryNewTabBuffer[256];
@@ -31,6 +32,8 @@ private:
 	bool firstFrame;
 	bool displayingRightPannel;
 	ImGuiID dockID;
+
+	DOMRenderer renderer;
 
 	bool attemptingToLoadNewPage;
 	bool attemptingToLoadFromHistory;

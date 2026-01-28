@@ -8,7 +8,7 @@
 #include <iostream>
 #include <tuple>
 #include <unordered_map>
-#include "DOM.h"
+#include "Node.h"
 #include "Util/ImMath.h"
 
 using namespace std;

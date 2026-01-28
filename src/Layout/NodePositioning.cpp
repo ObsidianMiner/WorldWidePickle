@@ -3,11 +3,11 @@
 * @brief Everything nessasary for Node::CalculateChildPositions
 */
 
-
 #include "Browser/Tab.h"
 #include "Util/StringUtils.h"
 #include "Util/ImMath.h"
 #include "UI/PickleGUI.h"
+#include "Node.h"
 
 /// <summary>
 /// Should be used to calculate the position of this nodes children.
@@ -30,6 +30,8 @@ void Node::CalculateChildPositions(float parentWidth, Website& website)
     {
         CalculateChildrenAutoMargins(parentWidth, website);
         CalculateChildrenPositions(parentWidth, website);
+
+		//TODO: Flexbox support
         /*
         if (HasStyle("display") && std::get<string>(style["display"]) == "flex") CalculateChildrenPositionsFlex(website);
         else

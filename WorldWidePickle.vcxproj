@@ -147,11 +147,12 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Browser\Browser.cpp" />
     <ClCompile Include="src\CSS\CSSBuilder.cpp" />
-    <ClCompile Include="src\DOM.cpp" />
+    <ClCompile Include="src\Node.cpp" />
     <ClCompile Include="src\DOMBuilder.cpp" />
-    <ClCompile Include="src\DOMRender.cpp" />
+    <ClCompile Include="src\Rendering\DOMRender.cpp" />
     <ClCompile Include="src\Fetch.cpp" />
-    <ClCompile Include="src\NodePositioning.cpp" />
+    <ClCompile Include="src\Layout\NodePositioning.cpp" />
+    <ClCompile Include="src\Rendering\TextRenderer.cpp" />
     <ClCompile Include="src\UI\PickleGUI.cpp" />
     <ClCompile Include="src\ReferenceLoading.cpp" />
     <ClCompile Include="src\Browser\Tab.cpp" />
@@ -159,7 +160,7 @@
     <ClCompile Include="src\CSS\UpdateNodeStyle.cpp" />
     <ClCompile Include="src\Website.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\WWPStyles.cpp" />
+    <ClCompile Include="src\UI\WWPStyles.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\backends\imgui_impl_dx10.h" />
@@ -172,15 +173,17 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\Browser\Browser.h" />
     <ClInclude Include="src\CSS\CSSBuilder.h" />
-    <ClInclude Include="src\DOM.h" />
+    <ClInclude Include="src\Layout\Layout.h" />
+    <ClInclude Include="src\Node.h" />
     <ClInclude Include="src\DOMBuilder.h" />
+    <ClInclude Include="src\Rendering\DOMRenderer.h" />
     <ClInclude Include="src\Util\ImMath.h" />
     <ClInclude Include="src\UI\PickleGUI.h" />
     <ClInclude Include="src\Util\StringUtils.h" />
     <ClInclude Include="src\Browser\Tab.h" />
     <ClInclude Include="src\Browser\Topbar.h" />
     <ClInclude Include="src\Website.h" />
-    <ClInclude Include="src\WWPStyles.h" />
+    <ClInclude Include="src\UI\WWPStyles.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

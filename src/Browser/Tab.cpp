@@ -226,6 +226,9 @@ void Tab::RenderURLBar()
     if (smallTopBar) closeButtonText = "X";
     if (ImGui::Button(closeButtonText.c_str())) waitingToClose = true;
 }
+/// <summary>
+/// Takes a snapshot of the current DOM and renders it to the screen.
+/// </summary>
 void Tab::DisplayPage()
 {
     std::multimap<int, std::function<void(ImDrawList*)>> draw_queue;
@@ -234,15 +237,12 @@ void Tab::DisplayPage()
     contentPos = ImGui::GetCursorPos() + ImVec2(0, 20);
     contentScreenPos = ImGui::GetCursorScreenPos() + ImVec2(0, 20);
 
-    /*
+    //Generate Draw Queue
     for (size_t i = 0; i < (*domSnapshot).size(); i++)
     {
-        (*domSnapshot)[i].CaculatePosition(contentSize.x, *currentPage);
-    }*/
-    for (size_t i = 0; i < (*domSnapshot).size(); i++)
-    {
-        (*domSnapshot)[i].Render(draw_queue, 0);
+        renderer.Render((*domSnapshot)[i], draw_queue, 0);
     }
+    //Draw Everything in the draw queue
     ImDrawList* dl = ImGui::GetWindowDrawList();
     for (auto& pair : draw_queue) {
         pair.second(dl);

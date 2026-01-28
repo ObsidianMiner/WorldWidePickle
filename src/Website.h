@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "DOM.h"
+#include "Node.h"
 #include "stb/stb_image.h"
 #include <d3d10_1.h>
 #include <d3d10.h>

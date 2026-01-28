@@ -1,5 +1,5 @@
 #pragma once
-#include "DOM.h"
+#include "Node.h"
 
 struct DOMBuilder
 {
