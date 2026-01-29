@@ -13,21 +13,7 @@
 #include "Node.h"
 #include "DOMRenderer.h"
 
-#define BOXMODE
 
-void DrawDebugBox(const ImVec2& bg_min, const Node& node, const ImVec2& totalImbed, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int& layer)
-{
-    ImVec2 bg_max = bg_min + node.layout.contentSize + totalImbed;
-
-    ImU32 color = IM_COL32(255, 0, 255, 20);
-    if (node.type == "#text") color = IM_COL32(255, 255, 0, 140);
-    if (node.type == "body") return;
-    if (node.type == "html") return;
-
-    queue.insert({ layer, [=](ImDrawList* dl) {
-        dl->AddRectFilled(bg_min, bg_max, color);
-    } });
-}
 
 /// <summary>
 /// Renders a node, and all of it's children. The main inlit to all site rendering.
@@ -148,6 +134,19 @@ void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::function<void(
     {
         RenderText(queue, layer, node.attributes["alt"], IM_COL32(255, 255, 255, 255), node.layout.contentSize);
     }
+}
+void DrawDebugBox(const ImVec2& bg_min, const Node& node, const ImVec2& totalImbed, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int& layer)
+{
+    ImVec2 bg_max = bg_min + node.layout.contentSize + totalImbed;
+
+    ImU32 color = IM_COL32(255, 0, 255, 20);
+    if (node.type == "#text") color = IM_COL32(255, 255, 0, 140);
+    if (node.type == "body") return;
+    if (node.type == "html") return;
+
+    queue.insert({ layer, [=](ImDrawList* dl) {
+        dl->AddRectFilled(bg_min, bg_max, color);
+    } });
 }
 inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer, const ImVec2& bg_min, const ImVec2& totalImbed)
 {

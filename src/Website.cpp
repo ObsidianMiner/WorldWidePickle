@@ -11,7 +11,7 @@
 #include "CSS/CSSBuilder.h"
 #include <tidy/tidybuffio.h>
 #include "Browser/Tab.h"
-#include "DOMBuilder.h"
+#include "HTML/HTMLBuilder.h"
 
 
 Website::Website(std::string url, Tab* tab)

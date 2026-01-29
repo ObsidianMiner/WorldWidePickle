@@ -93,7 +93,7 @@ void Layout::WrapNode(Node& node, float parentWidth, float& cursorX, float& curs
         }
         else
         {
-            cursorX = lineSize.x;
+            cursorX += lineSize.x;
         }
         text = lineEnd;
     }

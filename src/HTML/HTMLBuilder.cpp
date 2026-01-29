@@ -1,9 +1,9 @@
 /**
-* @file DOMBuilder.cpp
+* @file HTMLTreeBuilder.cpp
 * @brief Builds a DOM from an HTML file
 */
 
-#include "DOMBuilder.h"
+#include "HTMLBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>
@@ -15,7 +15,7 @@
 
 using namespace std;
 
-inline void DOMBuilder::AddAttributeOrType()
+inline void HTMLTreeBuilder::AddAttributeOrType()
 {
     if (readingAttribute)
     {
@@ -46,7 +46,7 @@ std::string Trim(const std::string& str) {
     auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
     return std::string(begin, end);
 }
-inline void DOMBuilder::StartTag()
+inline void HTMLTreeBuilder::StartTag()
 {
     insideTag = true;
     readingAttribute = false;
@@ -81,7 +81,7 @@ inline void DOMBuilder::StartTag()
     buildingNode->parent = currentContext;
     currentContext = buildingNode;
 }
-inline void DOMBuilder::EndTag()
+inline void HTMLTreeBuilder::EndTag()
 {
     AddAttributeOrType();
     if (htmlContent[pointer - 1] == '/') //Auto Closing Tag
@@ -162,7 +162,7 @@ void ValidateNode(Node* node)
         }
     }
 }
-void DOMBuilder::EndCDATA()
+void HTMLTreeBuilder::EndCDATA()
 {
     readingCDATA = false;
 
@@ -170,7 +170,7 @@ void DOMBuilder::EndCDATA()
     currentContext->attributes.emplace("CDATA", CDATAContent);
     lastEndTagPos = pointer;
 }
-std::vector<Node> DOMBuilder::ParseNodes()
+std::vector<Node> HTMLTreeBuilder::ParseNodes()
 {
     while (pointer < htmlContent.length())
     {
@@ -216,6 +216,6 @@ std::vector<Node> DOMBuilder::ParseNodes()
 
 std::vector<Node> ParseNodes(const string& htmlContent)
 {
-    DOMBuilder builder = DOMBuilder(htmlContent);
+    HTMLTreeBuilder builder = HTMLTreeBuilder(htmlContent);
     return builder.ParseNodes();
 }

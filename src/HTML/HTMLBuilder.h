@@ -1,11 +1,11 @@
 #pragma once
 #include "Node.h"
 
-struct DOMBuilder
+struct HTMLTreeBuilder
 {
 public:
 	std::vector<Node> ParseNodes();
-	DOMBuilder(const std::string& html) : htmlContent(html) {}
+	HTMLTreeBuilder(const std::string& html) : htmlContent(html) {}
 private:
 	void StartTag();
 	void AddAttributeOrType();

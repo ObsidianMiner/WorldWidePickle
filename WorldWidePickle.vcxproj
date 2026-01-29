@@ -150,7 +150,7 @@
     <ClCompile Include="src\CSS\CSSBuilder.cpp" />
     <ClCompile Include="src\Layout\LayoutChildren.cpp" />
     <ClCompile Include="src\Node.cpp" />
-    <ClCompile Include="src\DOMBuilder.cpp" />
+    <ClCompile Include="src\HTML\HTMLBuilder.cpp" />
     <ClCompile Include="src\Rendering\DOMRender.cpp" />
     <ClCompile Include="src\Fetch.cpp" />
     <ClCompile Include="src\Layout\Layout.cpp" />
@@ -178,7 +178,7 @@
     <ClInclude Include="src\CSS\CSSBuilder.h" />
     <ClInclude Include="src\Layout\Layout.h" />
     <ClInclude Include="src\Node.h" />
-    <ClInclude Include="src\DOMBuilder.h" />
+    <ClInclude Include="src\HTML\HTMLBuilder.h" />
     <ClInclude Include="src\Rendering\DOMRenderer.h" />
     <ClInclude Include="src\Util\ImMath.h" />
     <ClInclude Include="src\UI\PickleGUI.h" />

@@ -3,7 +3,7 @@
 * @brief Basic node functions
 */
 
-#include "DOMBuilder.h"
+#include "HTML/HTMLBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>

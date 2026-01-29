@@ -9,6 +9,25 @@
 #include "DOMRenderer.h"
 #include "Website.h"
 
+
+std::vector<std::string> WrapLines(std::string text, const float& wrapWidth, ImFont* font)
+{
+    std::vector<std::string> wrappedLines;
+    const char* textStart = text.c_str();
+    const char* textEnd = textStart + text.size();
+    const char* lineCharacterIndex = textStart;
+
+
+    while (lineCharacterIndex < textEnd)
+    {
+        const char* lineEnd = font->CalcWordWrapPositionA(font->Scale, lineCharacterIndex, textEnd, wrapWidth);
+        wrappedLines.emplace_back(lineCharacterIndex, lineEnd);
+        while (lineEnd < textEnd && (*lineEnd == ' ' || *lineEnd == '\n' || *lineEnd == '\r')) lineEnd++;
+        lineCharacterIndex = lineEnd;
+    }
+    return wrappedLines;
+}
+
 /// <summary>
 /// Renders wrapped text into a specified drawing queue at a given layer.
 /// </summary>
@@ -35,25 +54,14 @@ inline void RenderTextWrapped(std::multimap<int, std::function<void(ImDrawList*)
     if (wrapWidth <= 0.0f)
         wrapWidth = ImGui::GetContentRegionAvail().x;
 
-    std::vector<std::string> wrappedLines;
+    std::vector<std::string> wrappedLines = WrapLines(text, wrapWidth, font);
 
-    const char* textStart = text.c_str();
-    const char* textEnd = textStart + text.size();
-    const char* line = textStart;
     float lineHeight = fontSize;
 
-
-    while (line < textEnd)
-    {
-        const char* lineEnd = font->CalcWordWrapPositionA(font->Scale, line, textEnd, wrapWidth);
-        wrappedLines.emplace_back(line, lineEnd);
-        while (lineEnd < textEnd && (*lineEnd == ' ' || *lineEnd == '\n' || *lineEnd == '\r')) lineEnd++;
-        line = lineEnd;
-    }
     queue.insert({ layer, [=](ImDrawList* dl) {
         ImVec2 cursor = text_pos;
         float startX = text_pos.x;
-        cursor.x += wrapStart;
+        if(wrappedLines.size() > 1) cursor.x += wrapStart;
         for (auto& line : wrappedLines)
         {
             dl->AddText(PGUI::io->FontDefault, fontSize, cursor, color, line.c_str());
