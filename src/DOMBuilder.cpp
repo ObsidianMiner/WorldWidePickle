@@ -11,6 +11,7 @@
 #include "Node.h"
 #include "Util/ImMath.h"
 #include "Util/StringUtils.h"
+#include <Browser/BrowserConsole.h>
 
 using namespace std;
 
@@ -203,9 +204,8 @@ std::vector<Node> DOMBuilder::ParseNodes()
 
         pointer++;
     }
-    std::cout << "Finished parsing nodes." << std::endl;
 
-    std::cout << "Validating DOM..." << std::endl;
+    BrowserConsole::Log("DOM Builder", "Finished parsing nodes, starting validation.");
     for (Node& root : rootNodes)
     {
         ValidateNode(&root);

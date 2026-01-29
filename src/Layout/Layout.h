@@ -1,12 +1,22 @@
 #pragma once
+
+#include <imgui/imgui.h>
+#include <Node.h>
+
 /// <summary>
-/// Represents al the layout information of a website.
+/// Represents all the layout information of a website.
 /// </summary>
 class Layout
 {
-	
-};
-class NodeLayoutProperties
-{
-
+public:
+	//Layout
+	void LayoutChildren(Node& node, float parentWidth, Website& website);
+	static ImVec2 GetGlobalPos(const Node& node);
+private:
+	void CalculateContentSize(Node& node, float parentWidth, Website& website);
+	void SetMargins(Node& node);
+	bool ShouldGiveAutoMargin(Node& node);
+	//void CalculateChildrenPositionsFlex(Node& node, Website& website);
+	void WrapNode(Node& node, float parentWidth, float& currentX, float& currentY);
+	void CalculateChildrenAutoMargins(Node& node, float parentWidth, Website& website);
 };

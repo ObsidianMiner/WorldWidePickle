@@ -7,6 +7,7 @@
 #include <variant>
 #include <atomic>
 #include <memory>
+#include <Layout/Layout.h>
 
 struct PImage
 {
@@ -33,6 +34,8 @@ public:
 	int highestID;
 	Tab* tab;
 
+	Layout layout;
+
 	std::string interpretedDOM;
 	std::string interpretedCSS;
 
@@ -47,6 +50,7 @@ public:
 	void FetchContent();
 	void CreateRawTextVersion();
 	const char* getContent() const;
+
 private:
 	void StyleNodes();
 };

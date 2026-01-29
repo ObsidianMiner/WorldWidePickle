@@ -145,13 +145,15 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Browser\BrowerConsole.cpp" />
     <ClCompile Include="src\Browser\Browser.cpp" />
     <ClCompile Include="src\CSS\CSSBuilder.cpp" />
+    <ClCompile Include="src\Layout\LayoutChildren.cpp" />
     <ClCompile Include="src\Node.cpp" />
     <ClCompile Include="src\DOMBuilder.cpp" />
     <ClCompile Include="src\Rendering\DOMRender.cpp" />
     <ClCompile Include="src\Fetch.cpp" />
-    <ClCompile Include="src\Layout\NodePositioning.cpp" />
+    <ClCompile Include="src\Layout\Layout.cpp" />
     <ClCompile Include="src\Rendering\TextRenderer.cpp" />
     <ClCompile Include="src\UI\PickleGUI.cpp" />
     <ClCompile Include="src\ReferenceLoading.cpp" />
@@ -172,6 +174,7 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\Browser\Browser.h" />
+    <ClInclude Include="src\Browser\BrowserConsole.h" />
     <ClInclude Include="src\CSS\CSSBuilder.h" />
     <ClInclude Include="src\Layout\Layout.h" />
     <ClInclude Include="src\Node.h" />

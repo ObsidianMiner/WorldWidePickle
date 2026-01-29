@@ -5,12 +5,13 @@
 
 #include "Website.h"
 #include <thread>
-#include <iostream>
+#include "Browser/BrowserConsole.h"
 #include <regex>
 #include "UI/PickleGUI.h"
 #include "CSS/CSSBuilder.h"
 #include <tidy/tidybuffio.h>
 #include "Browser/Tab.h"
+#include "DOMBuilder.h"
 
 
 Website::Website(std::string url, Tab* tab)
@@ -26,6 +27,7 @@ Website::Website(std::string url, Tab* tab)
     nodes = std::make_shared<std::vector<Node>>();
 	std::thread(&Website::FetchContent, this).detach();
     highestID = 0;
+    layout = Layout();
 }
 
 Website::~Website()
@@ -52,10 +54,10 @@ void FixParentPointers(std::vector<Node>& nodes, Node* parent)
 void Website::FetchContent()
 {
     //Source
-    std::cout << "Fetching URL:" << url << std::endl;
+    BrowserConsole::Log("Fetch", "Fetching URL: " + url);
     content = GetTextFromFileOrURL(url, true);
 	CreateRawTextVersion();
-    std::cout << "Fetched HTML from" << url << std::endl;
+    BrowserConsole::Log("Fetch", "Fetched HTML from: " + url);
     //Nodes
     auto parsedNodes = std::make_shared<std::vector<Node>>(ParseNodes(content));
 	FixParentPointers(*parsedNodes, nullptr);
@@ -71,7 +73,7 @@ void Website::FetchContent()
     StyleNodes();
     interpretedDOM = PrintDOM(*ReadNodes());
     interpretedCSS = CSSBuilder::CSSString(styles);
-	std::cout << "Finished fetching URL:" << url << std::endl;
+    BrowserConsole::Log("Fetch", "Finished fetching URL:" + url);
     loaded = true;
 }
 /// <summary>
@@ -87,7 +89,7 @@ void Website::StyleNodes()
     }
     for (Node& node : *styledNodes)
     {
-        node.CalculateChildPositions(tab->contentSize.x, *this);
+        layout.LayoutChildren(node, tab->contentSize.x, *this);
     }
     FixParentPointers(*styledNodes, nullptr);
     nodes.store(styledNodes);

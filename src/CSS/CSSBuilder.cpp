@@ -3,7 +3,7 @@
 * @brief Creates a style sheet in memory.
 */
 
-#include <iostream>
+#include "Browser/BrowserConsole.h"
 #include "Node.h"
 #include "CSSBuilder.h"
 #include "Util/StringUtils.h"
@@ -68,7 +68,7 @@ unordered_map<string, unordered_map<string, RuleValue>> CSSBuilder::ParseCSS()
     unordered_map<string, unordered_map<string, RuleValue>> styles;
     if (css.find("Page not found") != string::npos)
     {
-        cout << "Not valid CSS" << endl;
+        BrowserConsole::Log("CSS", "Could not find CSS");
         return styles;
     }
     /*css.erase(
@@ -172,7 +172,8 @@ unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector(string css)
         if (css[pointer] == ';' && !(inUnsupported))
         {
             int colonLoc = css.find(':', componentStart);
-            if (colonLoc == string::npos || colonLoc > pointer) cout << "No colon found for property" << endl;
+            
+            if (colonLoc == string::npos || colonLoc > pointer) BrowserConsole::Log("CSS", "No colon found for property");
             else
             {
                 string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));
@@ -213,11 +214,11 @@ void CSSBuilder::ParseValue(RuleValue& component, string value)
 }
 void CSSBuilder::ParseComponent()
 {
-    if (!inSel) cout << "; found outside requirement" << endl;
+    if (!inSel) BrowserConsole::Log("CSS", "; found outside requirement");
     else
     {
         int colonLoc = css.find(':', componentStart);
-        if (colonLoc == string::npos || colonLoc > pointer) cout << "No colon found for property" << endl;
+        if (colonLoc == string::npos || colonLoc > pointer) BrowserConsole::Log("CSS", "No colon found for property (pt2)");
         else
         {
             string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));

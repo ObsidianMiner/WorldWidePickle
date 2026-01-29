@@ -1,6 +1,13 @@
+/**
+* @file TextRenderer.cpp
+* @brief Renders #text nodes
+*/
+
 #include "DOMRenderer.h"
 #include "Util/StringUtils.h"
 #include "UI/PickleGUI.h"
+#include "DOMRenderer.h"
+#include "Website.h"
 
 /// <summary>
 /// Renders wrapped text into a specified drawing queue at a given layer.
@@ -55,14 +62,14 @@ inline void RenderTextWrapped(std::multimap<int, std::function<void(ImDrawList*)
         }
     } });
 }
-inline void DOMRenderer::RenderTextElement(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
+void DOMRenderer::RenderTextElement(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
 {
-    float fontSize = GetFontSize(node.style);
+    float fontSize = GetFontSize(node.style, defaultFontSize);
     ImU32 color = IM_COL32(255, 255, 255, 255);
     std::string text = node.attributes.at("text");
     if (node.style.find("color") != node.style.end() && std::holds_alternative<ImU32>(node.style["color"]))
     {
         color = std::get<ImU32>(node.style["color"]);
     }
-    RenderTextWrapped(queue, layer, text, color, fontSize, node.contentSize.x, node.posInLine);
+    RenderTextWrapped(queue, layer, text, color, fontSize, node.layout.contentSize.x, node.layout.posInLine);
 }

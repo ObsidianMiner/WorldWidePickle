@@ -8,7 +8,9 @@ h6 { font-size : 10px; }
 br { padding : 8px; }
 a { color: LightSeaGreen; display:inline; }
 #text{display:inline;}
-br {display: inline;}
 span {display: inline;}
 nobr { white-space: nowrap;}
 center { margin: auto; text-align: center;}
+strong {display: inline;}
+em {display: inline;}
+p {margin-top: 6px; margin-bottom: 6px;}

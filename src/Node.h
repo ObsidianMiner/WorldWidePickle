@@ -8,15 +8,29 @@
 #include <variant>
 #include <imgui/imgui.h>
 
+class NodeLayout;
 class ImDrawList;
 class Website;
 
 #define RuleValue std::variant<std::string, int, float, ImU32>
 
+class NodeLayout
+{
+public:
+	ImVec2 localPos;
+	ImVec2 contentSize;
+	ImVec2 topLeftMargin;
+	ImVec2 bottomRightMargin;
+	ImVec2 border;
+	ImVec2 padding;
+	float posInLine;
+};
+
 struct Node
-{  
+{
 public:
 	//Core Node
+	int id;
 	std::string type;
 	std::unordered_map<std::string, std::string> attributes;
 	std::unordered_map<std::string, RuleValue> style;
@@ -30,18 +44,7 @@ public:
 	std::vector<Node> children;
 	std::vector<Node*> GetParents();
 
-	//Layout properties
-	ImVec2 localPos;
-	ImVec2 GlobalPos() const;
-	ImVec2 contentSize;
-	ImVec2 topLeftMargin;
-	ImVec2 bottomRightMargin;
-	ImVec2 border;
-	ImVec2 padding;
-	float posInLine;
-
-
-	int id;
+	NodeLayout layout;
 
 public:
 	//Reference Loading
@@ -52,21 +55,7 @@ public:
 	{
 		return this == &other;
 	}
-
-	
-public:
-	//Layout
-	void CalculateChildPositions(float parentWidth, Website& website);
-private:
-	void CaculateContentSize(float parentWidth, Website& website);
-	void SetMargins();
-	bool HasAutoMargin();
-	void CalculateChildrenPositions(float parentWidth, Website& website);
-	void CalculateChildrenPositionsFlex(Website& website);
-	void WrapSelf(float parentWidth, float& currentX, float& currentY);
-	void CalculateChildrenAutoMargins(float parentWidth, Website& website);
 };
-std::vector<Node> ParseNodes(const std::string& htmlContent);
 
 std::string PrintNode(Node* node, int indent);
 

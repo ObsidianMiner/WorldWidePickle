@@ -1,3 +1,9 @@
+/**
+* @file Topbar.cpp
+* @brief Renders the TopBar, that allows you create a new tab, and get the fps
+*/
+
+
 #include "Topbar.h"
 #include "UI/PickleGUI.h"
 #include "Tab.h"

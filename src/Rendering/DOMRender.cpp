@@ -1,3 +1,9 @@
+/**
+* @file DOMRender.cpp
+* @brief Renders nodes to the screen, TextRenderer is seperated.
+*/
+
+
 #include "UI/PickleGUI.h"
 #include <iostream>
 #include "Browser/Tab.h"
@@ -7,9 +13,25 @@
 #include "Node.h"
 #include "DOMRenderer.h"
 
+#define BOXMODE
+
+void DrawDebugBox(const ImVec2& bg_min, const Node& node, const ImVec2& totalImbed, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int& layer)
+{
+    ImVec2 bg_max = bg_min + node.layout.contentSize + totalImbed;
+
+    ImU32 color = IM_COL32(255, 0, 255, 20);
+    if (node.type == "#text") color = IM_COL32(255, 255, 0, 140);
+    if (node.type == "body") return;
+    if (node.type == "html") return;
+
+    queue.insert({ layer, [=](ImDrawList* dl) {
+        dl->AddRectFilled(bg_min, bg_max, color);
+    } });
+}
+
 /// <summary>
 /// Renders a node, and all of it's children. The main inlit to all site rendering.
-/// IMPORTANT: Positioning is done in a seperate pass.
+/// IMPORTANT: Layout must be done before hand.
 /// </summary>
 /// <param name="queue">Will be drawn after all nodes are rendered.</param>
 /// <param name="layer">Which layer should this node be rendered on.</param>
@@ -17,52 +39,43 @@ void DOMRenderer::Render(Node& node, std::multimap<int, std::function<void(ImDra
 {
     if (node.type == "head") return;
 
-
 	//if (HasStyle("padding")) padding = ImVec2(std::get<int>(style["padding"]), std::get<int>(style["padding"]));
-    ImVec2 totalImbed = node.padding + node.border;
-    ImGui::SetCursorPos(node.GlobalPos() + renderingTab->contentPos);
+    ImVec2 totalImbed = node.layout.padding + node.layout.border;
+    ImGui::SetCursorPos(Layout::GetGlobalPos(node) + renderingTab->contentPos);
     ImVec2 bg_min = ImGui::GetCursorScreenPos() - totalImbed;
 
     ImGui::BeginGroup();
 
-
-    RenderContents(node, queue, layer);
+    RenderContents(node, queue, layer, bg_min, totalImbed);
     RenderChildren(node, queue, layer + 1);
-    ImGui::Dummy(ImVec2(0,0));
 
     ImGui::EndGroup();
-    if (node.type == "div")
+}
+void DOMRenderer::DrawDiv(const ImVec2& bg_min, const Node& node, const ImVec2& totalImbed, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int& layer)
+{
+    ImVec2 bg_max = bg_min + node.layout.contentSize + totalImbed;
+
+    ImU32 bg_color = IM_COL32(60, 60, 60, 180);
+    float rounding = 6.0f;
+    ImU32 border_color = IM_COL32(255, 255, 255, 40);
+    queue.insert({ layer, [=](ImDrawList* dl) { dl->AddRectFilled(bg_min, bg_max, bg_color, rounding); } });
+    queue.insert({ layer, [=](ImDrawList* dl) { dl->AddRect(bg_min, bg_max, border_color, rounding); } });
+}
+void DOMRenderer::ProcessLink(const ImVec2& bg_min, Node& node, const ImVec2& totalImbed)
+{
+    ImVec2 bg_max = bg_min + node.layout.contentSize + totalImbed;
+    ImVec2 bg_size = bg_max - bg_min;
+    if (bg_size.x > 0 && bg_size.y > 0)
     {
-        ImVec2 bg_max = bg_min + node.contentSize + totalImbed;
+        if (ImGui::InvisibleButton(std::to_string(node.id).c_str(), bg_size)) {
+            std::cout << "Clicked";
+            std::string url = node.attributes["href"];
+            if (url[0] == '/') url = renderingTab->currentURL + url;
 
-        ImU32 bg_color = IM_COL32(60, 60, 60, 180);
-        float rounding = 6.0f;
-        ImU32 border_color = IM_COL32(255, 255, 255, 40);
-        queue.insert({ layer, [=](ImDrawList* dl) { dl->AddRectFilled(bg_min, bg_max, bg_color, rounding); } });
-        queue.insert({ layer, [=](ImDrawList* dl) { dl->AddRect(bg_min, bg_max, border_color, rounding); } });
-    }
-    
-    if (node.HasAttribute("href"))
-    {
-        ImVec2 bg_max = bg_min + node.contentSize + totalImbed;
-        ImVec2 bg_size = bg_max - bg_min;
-        if (bg_size.x > 0 && bg_size.y > 0)
-        {
-
-            if (ImGui::InvisibleButton(std::to_string(node.id).c_str(), bg_size)) {
-                std::cout << "Clicked";
-                std::string url = node.attributes["href"];
-                if (url[0] == '/') url = renderingTab->currentURL + url;
-
-                std::cout << "Opening URL: " << url << std::endl;
-                renderingTab->SwitchPage(url);
-            }
+            std::cout << "Opening URL: " << url << std::endl;
+            renderingTab->SwitchPage(url);
         }
-        
     }
-
-    if (node.type == "input") DrawInput(node);
-    //ImGui::Dummy(padding);
 }
 void DOMRenderer::DrawInput(Node& node)
 {
@@ -118,7 +131,7 @@ inline void DOMRenderer::RenderChildren(Node& node, std::multimap<int, std::func
         Render(node.children[i], queue, layer);
     }
 }
-inline void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
+void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
 {
     auto it = renderingTab->currentPage->images.find(node.attributes["src"]);
     if (it != renderingTab->currentPage->images.end())
@@ -133,10 +146,10 @@ inline void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::functio
     }
     else if (node.attributes.find("alt") != node.attributes.end())
     {
-        RenderText(queue, layer, node.attributes["alt"], IM_COL32(255, 255, 255, 255), node.contentSize);
+        RenderText(queue, layer, node.attributes["alt"], IM_COL32(255, 255, 255, 255), node.layout.contentSize);
     }
 }
-inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
+inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer, const ImVec2& bg_min, const ImVec2& totalImbed)
 {
     if (node.type == "img" && node.attributes.find("src") != node.attributes.end())
     {
@@ -146,4 +159,12 @@ inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::func
     {
         RenderTextElement(node, queue, layer);
     }
+
+    if (node.HasAttribute("href")) ProcessLink(bg_min, node, totalImbed);
+    if (node.type == "input") DrawInput(node);
+
+#ifdef BOXMODE
+    DrawDebugBox(bg_min, node, totalImbed, queue, layer);
+#endif
+    if (node.type == "div") DrawDiv(bg_min, node, totalImbed, queue, layer);
 }

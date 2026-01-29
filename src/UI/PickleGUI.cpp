@@ -1,5 +1,5 @@
 /**
-* @file ReferenceLoading.cpp
+* @file PickleGUI.cpp
 * @brief An interface for imgui specificly for WorldWidePickle
 */
 

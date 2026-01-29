@@ -7,33 +7,17 @@
 #include "UI/PickleGUI.h"
 #include <chrono>
 #include "../imgui/imgui.h"
-#include <iostream>
 #include "CSS/CSSBuilder.h"
 #include <imgui/imgui_internal.h>
 #include "Util/ImMath.h"
+#include "BrowserConsole.h"
 
 std::vector<Tab> tabs;
 int maxTabID = 0;
 char tryNewTabBuffer[256];
 Tab* renderingTab;
 
-void ValidateURL(char* urlBuffer, size_t bufferSize)
-{
-    std::string urlBufferStr(urlBuffer);
-    if (urlBufferStr[0] == '\"' && urlBufferStr[urlBufferStr.size() - 1] == '\"')
-    {
-        urlBufferStr = urlBufferStr.substr(1, urlBufferStr.size() - 2);
-        std::cout << urlBufferStr;
-        strncpy_s(urlBuffer, bufferSize, urlBufferStr.c_str(), bufferSize - 1);
-        urlBuffer[bufferSize - 1] = '\0'; // Ensure null-termination
-    }
-    if (urlBufferStr.find("http", 0) != 0 && urlBufferStr[1] != ':')
-    {
-        urlBufferStr.insert(0, "https://");
-        strncpy_s(urlBuffer, bufferSize, urlBufferStr.c_str(), bufferSize - 1);
-        urlBuffer[bufferSize - 1] = '\0'; // Ensure null-termination
-    }
-}
+
 Tab::Tab(std::string url)
 {
     strncpy_s(urlBuffer, url.c_str(), sizeof(urlBuffer) - 1);
@@ -44,7 +28,8 @@ Tab::Tab(std::string url)
     this->id = maxTabID;
     char name[256];
     std::snprintf(name, sizeof(name), "%s###%d", currentPage->name.c_str(), id);
-    std::cout << "Creating tab with name: " << name << " ID: " << id << std::endl;
+
+    BrowserConsole::Log("Tab", "Creating tab with Name: " + std::string(name) + " ID: " + std::to_string(id));
     viewingSource = false;
     viewingDOM = false;
     viewingCSS = false;
@@ -52,6 +37,24 @@ Tab::Tab(std::string url)
     attemptingToLoadNewPage = false;
     firstFrame = true;
     attemptingToLoadFromHistory = false;
+    displayingRightPannel = false;
+    dockID = -1;
+}
+void ValidateURL(char* urlBuffer, size_t bufferSize)
+{
+    std::string urlBufferStr(urlBuffer);
+    if (urlBufferStr[0] == '\"' && urlBufferStr[urlBufferStr.size() - 1] == '\"')
+    {
+        urlBufferStr = urlBufferStr.substr(1, urlBufferStr.size() - 2);
+        strncpy_s(urlBuffer, bufferSize, urlBufferStr.c_str(), bufferSize - 1);
+        urlBuffer[bufferSize - 1] = '\0'; // Ensure null-termination
+    }
+    if (urlBufferStr.find("http", 0) != 0 && urlBufferStr[1] != ':')
+    {
+        urlBufferStr.insert(0, "https://");
+        strncpy_s(urlBuffer, bufferSize, urlBufferStr.c_str(), bufferSize - 1);
+        urlBuffer[bufferSize - 1] = '\0'; // Ensure null-termination
+    }
 }
 void Tab::SetupDocking()
 {
@@ -95,15 +98,7 @@ void Tab::SetupDocking()
 }
 void Tab::OnResize()
 {
-    if (currentPage->loaded)
-    {
-        std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
-        for (size_t i = 0; i < (*domSnapshot).size(); i++)
-        {
-            (*domSnapshot)[i].CalculateChildPositions(contentSize.x, *currentPage);
-		}
-        currentPage->nodes.store(domSnapshot);
-    }
+    justResized = true;
 }
 void Tab::Render()
 {
@@ -117,6 +112,8 @@ void Tab::Render()
         renderingTab = nullptr;
         return;
     }
+
+    //Update Tab Window
 	winPos = ImGui::GetWindowPos();
 	ImVec2 newWinSize = ImGui::GetWindowSize();
     if (newWinSize.x != winSize.x || newWinSize.y != winSize.y)
@@ -126,6 +123,18 @@ void Tab::Render()
 	}
     contentSize = ImGui::GetContentRegionAvail();
 
+    if (currentPage->loaded)
+    {
+        std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
+        for (size_t i = 0; i < (*domSnapshot).size(); i++)
+        {
+            currentPage->layout.LayoutChildren((*domSnapshot)[i], contentSize.x, *currentPage);
+        }
+        currentPage->nodes.store(domSnapshot);
+        justResized = false;
+    }
+
+    //URL Bar
     RenderURLBar();
 
     if (attemptingToLoadNewPage && currentPage->loaded)
@@ -137,20 +146,9 @@ void Tab::Render()
         attemptingToLoadFromHistory = false;
     }
 
-    if (currentPage->loaded && !currentPage->wasLoaded)
-    {
-        currentPage->wasLoaded = true;
-        if (currentPage->name.find("301") != string::npos && false)
-        {
-            size_t urlStart = currentPage->content.find("The document has moved <a href=\"");
-            size_t urlEnd = currentPage->content.find('"', urlStart);
-            std::string url = currentPage->content.substr(urlStart, urlEnd);
-            currentURL = url;
-            currentPage = std::make_unique<Website>(url, this);
-        }
-    }
+    if (currentPage->loaded && !currentPage->wasLoaded) OnPageLoaded();
 
-    
+    //Display Page
     try
     {
         DisplayPage();
@@ -166,11 +164,23 @@ void Tab::Render()
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_C, false) && ImGui::IsWindowFocused()) viewingCSS = !viewingCSS;
     ImGui::End();
 
-    if (viewingSource) DisplaySource();
-    if (viewingDOM) DisplayDOM();
-    if (viewingCSS) DisplayCSS();
+    if (viewingSource) DisplayDebugMenu("Source", currentPage->websiteSource);
+    if (viewingDOM) DisplayDebugMenu("DOM", currentPage->interpretedDOM);
+    if (viewingCSS) DisplayDebugMenu("CSS", currentPage->interpretedCSS);
     renderingTab = nullptr;
     UpdateDocking();
+}
+void Tab::OnPageLoaded()
+{
+    currentPage->wasLoaded = true;
+    if (currentPage->name.find("301") != string::npos && false)
+    {
+        size_t urlStart = currentPage->content.find("The document has moved <a href=\"");
+        size_t urlEnd = currentPage->content.find('"', urlStart);
+        std::string url = currentPage->content.substr(urlStart, urlEnd);
+        currentURL = url;
+        currentPage = std::make_unique<Website>(url, this);
+    }
 }
 void Tab::UpdateDocking()
 {
@@ -188,7 +198,7 @@ void Tab::UpdateDocking()
 }
 void Tab::RenderURLBar()
 {
-    bool smallTopBar = winSize.x < 600;
+    bool smallTopBar = winSize.x < 550;
     float backButtonSize = (urlHistory.size() > 0 ? 45 : 0);
     
     if (urlHistory.size() > 0 && ImGui::Button("Back"))
@@ -200,20 +210,21 @@ void Tab::RenderURLBar()
         attemptingToLoadFromHistory = true;
     }
     ImGui::SameLine();
-    ImGui::PushItemWidth(winSize.x - (smallTopBar ? 140 : 300) - backButtonSize);
+    ImGui::PushItemWidth(winSize.x - (smallTopBar ? 110 : 210) - backButtonSize);
     if (ImGui::InputText("URL", urlBuffer, IM_ARRAYSIZE(urlBuffer), ImGuiInputTextFlags_EnterReturnsTrue))
     {
         ValidateURL(urlBuffer, sizeof(urlBuffer));
         attemptingToLoadNewPage = true;
     }
     ImGui::SameLine();
+    /*
     string getPageButtonText = "Get Page";
     if (smallTopBar) getPageButtonText = "->";
     if (ImGui::Button(getPageButtonText.c_str()))
     {
         ValidateURL(urlBuffer, sizeof(urlBuffer));
         attemptingToLoadNewPage = true;
-    }
+    }*/
     ImGui::SameLine();
     string refreshButtonText = "Refresh";
     if (smallTopBar) refreshButtonText = "O";
@@ -248,49 +259,20 @@ void Tab::DisplayPage()
         pair.second(dl);
     }
 }
-void Tab::DisplayCSS()
+void Tab::DisplayDebugMenu(string type, string content)
 {
     if (currentPage == nullptr) return;
     char name[256];
-    std::snprintf(name, sizeof(name), "%s CSS###CSS %d", currentPage->name.c_str(), id);
+    std::snprintf(name, sizeof(name), "%s %s###%s %d", currentPage->name.c_str(), type.c_str(), type.c_str(), id);
     ImGui::Begin(name);
     ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+    char title[256];
+    std::snprintf(name, sizeof(title), "##LoadedPage%s", type.c_str());
+    
     ImGui::InputTextMultiline(
-        "##LoadedPageCSS",
-        (char*)(currentPage->interpretedCSS).c_str(),
-        (currentPage->interpretedCSS).size() + 1,
-        size,
-        ImGuiInputTextFlags_ReadOnly
-    );
-    ImGui::End();
-}
-void Tab::DisplayDOM()
-{
-    char name[256];
-    std::snprintf(name, sizeof(name), "%s DOM###DOM %d", currentPage->name.c_str(), id);
-    currentPage->interpretedDOM = PrintDOM(*currentPage->ReadNodes());
-    ImGui::Begin(name);
-    ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
-    ImGui::InputTextMultiline(
-        "##LoadedPageDOM",
-        (char*)(currentPage->interpretedDOM).c_str(),
-        (currentPage->interpretedDOM).size() + 1,
-        size,
-        ImGuiInputTextFlags_ReadOnly
-    );
-    ImGui::End();
-}
-void Tab::DisplaySource()
-{
-    char name[256];
-    std::snprintf(name, sizeof(name), "%s Source###Source %d", currentPage->name.c_str(), id);
-    ImGui::Begin(name);
-    std::string* currentDisplayText = PGUI::io->KeyAlt ? &currentPage->content : &currentPage->websiteSource;
-    ImVec2 size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
-    ImGui::InputTextMultiline(
-        "##LoadedPageSource",
-        (char*)(*currentDisplayText).c_str(),
-        (*currentDisplayText).size() + 1,
+        title,
+        (char*)(content).c_str(),
+        content.size() + 1,
         size,
         ImGuiInputTextFlags_ReadOnly
     );

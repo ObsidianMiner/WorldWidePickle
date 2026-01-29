@@ -1,3 +1,8 @@
+/**
+* @file WWPStyles.cpp
+* @brief Holds browser ImGui styles.
+*/
+
 #include "WWPStyles.h"
 
 ImGuiStyle SetPurpleStyle()

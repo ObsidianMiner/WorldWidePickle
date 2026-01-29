@@ -37,12 +37,12 @@ private:
 
 	bool attemptingToLoadNewPage;
 	bool attemptingToLoadFromHistory;
+	bool justResized;
 	vector<string> urlHistory;
 	void SetupDocking();
 	void OnResize();
-	void DisplaySource();
-	void DisplayDOM();
-	void DisplayCSS();
+	void OnPageLoaded();
+	void DisplayDebugMenu(string type, string content);
 	void UpdateDocking();
 };
 extern vector<Tab> tabs;

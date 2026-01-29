@@ -26,3 +26,4 @@ private:
 	int lastEndTagPos = 0;
 	int highestID = 0;
 };
+std::vector<Node> ParseNodes(const std::string& htmlContent);

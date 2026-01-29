@@ -1,5 +1,5 @@
 /**
-* @file DOMBuilder.cpp
+* @file Node.cpp
 * @brief Basic node functions
 */
 
@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include "Node.h"
 #include "Util/ImMath.h"
+#include <Layout/Layout.h>
 
 using namespace std;
 
@@ -24,10 +25,6 @@ bool Node::HasStyle(const std::string s) const
 {
     return style.find(s) != style.end();
 }
-bool Node::HasAutoMargin()
-{
-    return HasStyle("margin") && std::holds_alternative<string>(style["margin"]) && std::get<string>(style["margin"]) == "auto";
-}
 
 float Node::GetStyleFloat(const std::string& key, float defaultValue) const
 {
@@ -40,11 +37,7 @@ float Node::GetStyleFloat(const std::string& key, float defaultValue) const
 }
 
 
-ImVec2 Node::GlobalPos() const
-{
-    if (parent != nullptr) return localPos + parent->GlobalPos();
-    return localPos;
-}
+
 
 std::vector<Node*> Node::GetParents()
 {
@@ -73,16 +66,16 @@ string PrintNode(Node* node, int indent)
 {
     string output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes);
 #ifdef DebugPos
-    string globalPos = " | GPos: " + to_string(int(node->GlobalPos().x)) + ' ' + to_string(int(node->GlobalPos().y));
-    string localPos = "         | LPos: " + to_string(int(node->localPos.x)) + ' ' + to_string(int(node->localPos.y));
+    string globalPos = " | GPos: " + to_string(int(Layout::GetGlobalPos(*node).x)) + ' ' + to_string(int(Layout::GetGlobalPos(*node).y));
+    string localPos = "         | LPos: " + to_string(int(node->layout.localPos.x)) + ' ' + to_string(int(node->layout.localPos.y));
     output += localPos + globalPos;
 #endif
 #ifdef DebugMargins
-    string margins = " | Margins L: " + to_string(int(node->topLeftMargin.x)) + " R: " + to_string(int(node->bottomRightMargin.x))
-        + " T: " + to_string(int(node->topLeftMargin.y)) + " B: " + to_string(int(node->bottomRightMargin.y));
+    string margins = " | Margins L: " + to_string(int(node->layout.topLeftMargin.x)) + " R: " + to_string(int(node->layout.bottomRightMargin.x))
+        + " T: " + to_string(int(node->layout.topLeftMargin.y)) + " B: " + to_string(int(node->layout.bottomRightMargin.y));
     output += margins;
 #endif
-    string contentSize = " | CS: " + to_string(int(node->contentSize.x)) + ' ' + to_string(int(node->contentSize.y));
+    string contentSize = " | CS: " + to_string(int(node->layout.contentSize.x)) + ' ' + to_string(int(node->layout.contentSize.y));
     output += contentSize + "\n";
     for (size_t i = 0; i < node->children.size(); i++)
     {

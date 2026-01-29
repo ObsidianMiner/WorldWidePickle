@@ -6,7 +6,7 @@
 #include "Node.h"
 #include "Website.h"
 #include "CSS/CSSBuilder.h"
-#include <iostream>
+#include "Browser/BrowserConsole.h"
 
 std::string GetRealURL(const std::string& possiblyRelativeURL, Website& website)
 {
@@ -30,7 +30,6 @@ void Node::LoadReferences(Website& website)
     {
         website.images.emplace(attributes["src"], LoadImgFromWebsiteURL(GetRealURL(attributes["src"], website)));
         auto it = website.images.find(attributes["src"]);
-        std::cout << (it != website.images.end());
     }
     else if (type == "title")
     {
@@ -55,7 +54,7 @@ void Node::LoadReferences(Website& website)
                         website.styles.insert_or_assign(selector, declarations);
                     }
                 }
-				cout << "Loaded CSS from " << realURL << endl;
+                BrowserConsole::Log("Fetch", "Loaded CSS from " + realURL);
             }
         }
     }
@@ -72,7 +71,7 @@ void Node::LoadReferences(Website& website)
                 website.styles.insert_or_assign(selector, declarations);
             }
         }
-        cout << "Loaded CSS from style element" << endl;
+        BrowserConsole::Log("Fetch", "Loaded CSS from style element");
     }
     for (size_t i = 0; i < children.size(); i++)
     {

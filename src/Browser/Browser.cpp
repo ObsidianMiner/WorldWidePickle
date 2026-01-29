@@ -1,3 +1,8 @@
+/**
+* @file Browser.cpp
+* @brief Performs the main loop, and loads up the first tab, topbar, globalCSS, and PickleGUI
+*/
+
 #include "UI/PickleGUI.h"
 #include <iostream>
 #include "Tab.h"
@@ -5,6 +10,7 @@
 #include "CSS/CSSBuilder.h"
 #include "UI/WWPStyles.h"
 #include "Browser.h"
+#include "BrowserConsole.h"
 
 using namespace std::string_literals;
 
@@ -15,6 +21,7 @@ void Browser::SetupUI()
 {
     PGUI::PGUI();
     SetPurpleStyle();
+    BrowserConsole::Log("Browser", "Setup UI");
 }
 void Browser::LoadGlobalStyles()
 {
@@ -22,7 +29,7 @@ void Browser::LoadGlobalStyles()
     std::string globalCSS = GetTextFromFileOrURL(globalPath, false);
     CSSBuilder globalStylesBuilder(globalCSS);
     globalStyles = globalStylesBuilder.ParseCSS();
-    std::cout << "[Main] Loaded Global Styles" << std::endl;
+    BrowserConsole::Log("Browser", "Loaded Global Styles");
 }
 void Browser::LoadHomePage()
 {
