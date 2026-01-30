@@ -162,6 +162,7 @@ void Tab::Render()
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_S, false) && ImGui::IsWindowFocused()) viewingSource = !viewingSource;
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_D, false) && ImGui::IsWindowFocused()) viewingDOM = !viewingDOM;
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_C, false) && ImGui::IsWindowFocused()) viewingCSS = !viewingCSS;
+    if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_L, false) && ImGui::IsWindowFocused()) Layout::debuggingLayout = !Layout::debuggingLayout;
     ImGui::End();
 
     if (viewingSource) DisplayDebugMenu("Source", currentPage->websiteSource);

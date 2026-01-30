@@ -17,20 +17,20 @@ class Website;
 class NodeLayout
 {
 public:
-	ImVec2 localPos;
-	ImVec2 contentSize;
-	ImVec2 topLeftMargin;
-	ImVec2 bottomRightMargin;
-	ImVec2 border;
-	ImVec2 padding;
-	float posInLine;
+	ImVec2 localPos{ 0.0f, 0.0f };
+	ImVec2 contentSize{ 0.0f, 0.0f };
+	ImVec2 topLeftMargin{ 0.0f, 0.0f };
+	ImVec2 bottomRightMargin{ 0.0f, 0.0f };
+	ImVec2 border{ 0.0f, 0.0f };
+	ImVec2 padding{ 0.0f, 0.0f };
+	float posInLine = 0.0f;
 };
 
 struct Node
 {
 public:
 	//Core Node
-	int id;
+	int id = -1;
 	std::string type;
 	std::unordered_map<std::string, std::string> attributes;
 	std::unordered_map<std::string, RuleValue> style;
@@ -43,10 +43,13 @@ public:
 	Node* parent = nullptr;
 	std::vector<Node> children;
 	std::vector<Node*> GetParents();
+	int GetIndexInParent() const;
 
 	NodeLayout layout;
 
-public:
+	Node(Node* parent, std::string type, int id) { this->parent = parent; this->type = type; this->id = id; };
+	Node() = default;
+
 	//Reference Loading
 	void LoadReferences(Website& website);
 	void UpdateStyle(const Website& website, const std::unordered_map<std::string, RuleValue>& inheritedStyle);

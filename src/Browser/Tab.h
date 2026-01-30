@@ -4,6 +4,7 @@
 #include <Rendering/DOMRenderer.h>
 using namespace std;
 
+
 extern char tryNewTabBuffer[256];
 class Tab
 {

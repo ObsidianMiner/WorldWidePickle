@@ -12,6 +12,7 @@ public:
 	//Layout
 	void LayoutChildren(Node& node, float parentWidth, Website& website);
 	static ImVec2 GetGlobalPos(const Node& node);
+	static bool debuggingLayout;
 private:
 	void CalculateContentSize(Node& node, float parentWidth, Website& website);
 	void SetMargins(Node& node);

@@ -5,42 +5,8 @@
 
 #include "Layout.h"
 #include "Util/StringUtils.h"
+#include "Browser/BrowserConsole.h"
 using namespace std;
-
-/// <summary>
-/// Should be used on the root nodes.
-/// </summary>
-/// <param name="parentWidth"></param>
-/// <param name="website"></param>
-/*
-void Layout::LayoutDOM(Node& root, float parentWidth, Website& website)
-{
-    contentSize = ImVec2(parentWidth, 0);
-    if (HasStyle("padding"))
-    {
-        float paddingAmount = GetStyleFloat("padding");
-        padding = ImVec2(paddingAmount, paddingAmount);
-    }
-    SetMargins();
-    
-
-    //Caculate relative positions of children (The main part)
-    if (children.size() > 0)
-    {
-        CalculateChildrenAutoMargins(parentWidth, website);
-        CalculateChildrenPositions(parentWidth, website);
-
-        //TODO: Flexbox support
-        
-        if (HasStyle("display") && std::get<string>(style["display"]) == "flex") CalculateChildrenPositionsFlex(website);
-        else
-        {
-        }
-    }
-
-
-    CaculateContentSize(parentWidth, website); //Overrides in applicable cases after the value set by CalculateChildrenPositions
-}*/
 
 inline void MoveCursorToNextLine(float& currentLineHeight, float& cursorY)
 {
@@ -48,6 +14,69 @@ inline void MoveCursorToNextLine(float& currentLineHeight, float& cursorY)
 
     cursorY += lineHeight;
     currentLineHeight = 0;
+}
+/// <summary>
+/// Helper to check if a node has inline display
+/// </summary>
+inline bool IsInlineDisplay(Node& node)
+{
+    return node.HasStyle("display") &&
+        std::get<std::string>(node.style["display"]) == "inline";
+}
+/// <summary>
+/// Recursively look up the tree to determine if the last rendered element has a space after it, or it has a space before it.
+/// </summary>
+inline bool ShouldRenderSpaceBefore(Node& childNode, int childIndex)
+{
+    // Check if this node explicitly requests a space before
+    
+    // Walk up the tree to find the previously rendered element
+    Node* currentNode = &childNode;
+    int currentIndex = childIndex;
+    
+    while (currentNode != nullptr) {
+        Node* parent = currentNode->parent;
+        if (parent == nullptr) {
+            break; // Reached root
+        }
+        
+        // If we're not the first child, check the previous sibling
+        if (currentIndex > 0)
+        {
+            Node& previousSibling = (parent->children[currentIndex - 1]);
+
+            //If we pass by a block, it must mean there is a new line inbetween them, and a space should not be inserted
+            if (!IsInlineDisplay(previousSibling)) return false;
+            
+            // Check if previous sibling has spaceAfter
+            if ((previousSibling.HasAttribute("sa") || childNode.HasAttribute("sb"))) {
+                return true;
+            }
+
+            
+            // Find the last descendant of the previous sibling
+            Node* lastDescendant = &previousSibling;
+            while (!lastDescendant->children.empty()) {
+                lastDescendant = &lastDescendant->children.back();
+                //If we pass by a block, it must mean there is a new line inbetween them, and a space should not be inserted
+                if (!IsInlineDisplay(*lastDescendant)) return false;
+
+                if ((lastDescendant->HasAttribute("sa") || childNode.HasAttribute("sb"))) {
+                    return true;
+                }
+            }
+            
+            // We found the previously rendered element and it has no spaceAfter
+            return false;
+        }
+        if (!IsInlineDisplay(*parent)) return false;
+        
+        // We're the first child, so move up to parent
+        currentIndex = parent->GetIndexInParent(); // You'll need this method
+        currentNode = parent;
+    }
+    
+    return false;
 }
 /// <summary>
 /// Sets the layout of its children, determening their size and position, and then setting it's own size.
@@ -102,8 +131,15 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
             if (child.type == "#text")
             {
                 cursorX += child.layout.topLeftMargin.x + child.layout.border.x;
+
+                if (ShouldRenderSpaceBefore(child, i))
+                {
+                    child.attributes.emplace(std::pair<std::string, std::string>{ "spR", "1"});
+                    cursorX += 5;
+                }
                 child.layout.posInLine = cursorX;
                 child.layout.localPos = ImVec2(cursorX, cursorY);
+
 
                 //Text cannot have children, so this does not exactly make sense
                 //LayoutChildren(child, parentWidth, website);

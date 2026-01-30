@@ -11,6 +11,7 @@
 #include "Layout.h"
 #include <iostream>
 
+bool Layout::debuggingLayout = false;
 
 void Layout::SetMargins(Node& node)
 {

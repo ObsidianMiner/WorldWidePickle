@@ -46,6 +46,39 @@ std::string Trim(const std::string& str) {
     auto end = std::find_if(str.rbegin(), str.rend(), is_not_space).base();
     return std::string(begin, end);
 }
+std::string TextTrim(const std::string& str, bool& spacesBefore, bool& spacesAfter) {
+    auto is_not_space = [](unsigned char ch) {
+        return !std::isspace(ch);
+        };
+    auto is_not_newline = [](unsigned char ch) {
+        return !std::isspace(ch);
+        };
+
+    auto begin = std::find_if(str.begin(), str.end(), is_not_space);
+    if (begin == str.end()) return ""; // All whitespace
+
+    auto end = std::find_if(str.rbegin(), str.rend(), is_not_newline).base();
+
+    spacesBefore = begin != str.begin();
+    spacesAfter = end != str.end();
+
+    return std::string(begin, end);
+}
+inline void CreateInnerText(Node* parent, std::string textInbetweenTags, int& highestID)
+{
+    
+    bool spacesBefore = false;
+    bool spacesAfter = false;
+    std::string innerText = TextTrim(textInbetweenTags, spacesBefore, spacesAfter);
+    if (innerText.length() > 0)
+    {
+        auto& node = parent->children.emplace_back(parent, "#text", highestID++);
+        node.attributes.emplace(std::pair<std::string, std::string>{ "text", innerText });
+        if (spacesBefore) node.attributes.emplace(std::pair<std::string, std::string>{ "sb", "1"});
+        if (spacesAfter) node.attributes.emplace(std::pair<std::string, std::string>{ "sa", "1"});
+        highestID++;
+    }
+}
 inline void HTMLTreeBuilder::StartTag()
 {
     insideTag = true;
@@ -59,17 +92,9 @@ inline void HTMLTreeBuilder::StartTag()
     }
     else
     {
-        std::string innerText = Trim(htmlContent.substr(lastEndTagPos + 1, pointer - (lastEndTagPos + 1)));
-        if (innerText.length() > 0)
-        {
-            currentContext->children.emplace_back();
-            currentContext->children[currentContext->children.size() - 1].parent = currentContext;
-            currentContext->children[currentContext->children.size() - 1].type = "#text";
-            currentContext->children[currentContext->children.size() - 1].attributes.emplace(std::pair<std::string, std::string>{ "text", innerText });
-            currentContext->children[currentContext->children.size() - 1].id = highestID;
-            highestID++;
-        }
-
+        //Handle innerText
+        CreateInnerText(currentContext, htmlContent.substr(lastEndTagPos + 1, pointer - (lastEndTagPos + 1)), highestID);
+        //Add the node to the current context
         currentContext->children.emplace_back();
         buildingNode = &currentContext->children[currentContext->children.size() - 1];
         buildingNode->id = highestID;
@@ -112,16 +137,7 @@ inline void HTMLTreeBuilder::EndTag()
 
                 if (parents[i]->children.size() == 0)
                 {
-                    std::string innerText = Trim(htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1)));
-                    if (innerText.length() > 0)
-                    {
-                        parents[i]->children.emplace_back();
-                        parents[i]->children[0].parent = parents[i];
-                        parents[i]->children[0].type = "#text";
-                        parents[i]->children[0].attributes.emplace(std::pair<std::string, std::string>{ "text", innerText });
-                        parents[i]->children[0].id = highestID;
-                        highestID++;
-                    }
+                    CreateInnerText(parents[i], htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1)), highestID);
 #ifdef ParseDebug
                     std::cout << parents[i]->innerText << std::endl;
 #endif

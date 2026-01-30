@@ -11,6 +11,7 @@
 #include "Node.h"
 #include "Util/ImMath.h"
 #include <Layout/Layout.h>
+#include <Browser/BrowserConsole.h>
 
 using namespace std;
 
@@ -38,7 +39,10 @@ float Node::GetStyleFloat(const std::string& key, float defaultValue) const
 
 
 
-
+/// <summary>
+/// Gets all of the node's parents from bottom (most directly) to top parent.
+/// </summary>
+/// <returns></returns>
 std::vector<Node*> Node::GetParents()
 {
     std::vector<Node*> parents;
@@ -49,6 +53,19 @@ std::vector<Node*> Node::GetParents()
         currentParent = currentParent->parent;
     }
     return parents;
+}
+int Node::GetIndexInParent() const
+{
+    auto it = std::find_if(parent->children.begin(), parent->children.end(),
+        [&](const Node& elem) {
+            return elem.id == id;
+        });
+
+    if (it != parent->children.end()) {
+        return std::ranges::distance(parent->children.begin(), it);
+    }
+    BrowserConsole::Error("Layout", "Could not find index in parent, parent is likely invalid");
+    return -1;
 }
 string AttributesToString(const unordered_map<string, string> attributes)
 {
