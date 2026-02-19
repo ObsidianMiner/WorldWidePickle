@@ -100,14 +100,16 @@ string PrintNode(Node* node, int indent)
     }
     return output;
 }
-string PrintDOM(std::vector<Node> children)
+
+std::string PrintNodeAttributes(Node* node)
 {
-    string output;
-    for (size_t i = 0; i < children.size(); i++)
+    std::string result;
+    result.reserve(node->attributes.size() * 5);
+    for (const auto& attribute : node->attributes)
     {
-        output += PrintNode(&children[i], 0);
+        result += attribute.first + "=\"" + attribute.second + "\"";
     }
-    return output;
+    return result;
 }
 bool operator==(const Node& node1, const Node& node2)
 {

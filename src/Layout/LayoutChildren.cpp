@@ -6,6 +6,7 @@
 #include "Layout.h"
 #include "Util/StringUtils.h"
 #include "Browser/BrowserConsole.h"
+#include "Util/Fonts.h"
 using namespace std;
 
 inline void MoveCursorToNextLine(float& currentLineHeight, float& cursorY)
@@ -140,11 +141,11 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
                 child.layout.posInLine = cursorX;
                 child.layout.localPos = ImVec2(cursorX, cursorY);
 
-
-                //Text cannot have children, so this does not exactly make sense
-                //LayoutChildren(child, parentWidth, website);
-                //Instead
+                
+                ImFont* font = GetNodeFont(child);
                 WrapNode(child, parentWidth, cursorX, cursorY);
+                //CalculateContentSize(child, parentWidth, website);
+
                 cursorX += child.layout.bottomRightMargin.x + child.layout.border.x;
                 currentLineHeight = std::max(currentLineHeight, child.layout.contentSize.y);
             }

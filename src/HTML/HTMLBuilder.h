@@ -4,7 +4,7 @@
 struct HTMLTreeBuilder
 {
 public:
-	std::vector<Node> ParseNodes();
+	Node ParseNodes();
 	HTMLTreeBuilder(const std::string& html) : htmlContent(html) {}
 private:
 	void StartTag();
@@ -26,4 +26,4 @@ private:
 	int lastEndTagPos = 0;
 	int highestID = 0;
 };
-std::vector<Node> ParseNodes(const std::string& htmlContent);
+Node ParseNodes(const std::string& htmlContent);

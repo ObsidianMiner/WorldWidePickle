@@ -19,6 +19,8 @@ public:
 	ImVec2 contentPos;
 	ImVec2 contentScreenPos;
 
+	Node* hoveringNode;
+
 	Tab(string url);
 	void Render();
 	void RenderURLBar();
@@ -30,6 +32,7 @@ private:
 	bool viewingSource;
 	bool viewingDOM;
 	bool viewingCSS;
+	bool debuggingHover;
 	bool firstFrame;
 	bool displayingRightPannel;
 	ImGuiID dockID;
@@ -44,6 +47,7 @@ private:
 	void OnResize();
 	void OnPageLoaded();
 	void DisplayDebugMenu(string type, string content);
+	void DisplayHoverDebug();
 	void UpdateDocking();
 };
 extern vector<Tab> tabs;

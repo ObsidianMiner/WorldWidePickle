@@ -186,7 +186,7 @@ void HTMLTreeBuilder::EndCDATA()
     currentContext->attributes.emplace("CDATA", CDATAContent);
     lastEndTagPos = pointer;
 }
-std::vector<Node> HTMLTreeBuilder::ParseNodes()
+Node HTMLTreeBuilder::ParseNodes()
 {
     while (pointer < htmlContent.length())
     {
@@ -227,10 +227,19 @@ std::vector<Node> HTMLTreeBuilder::ParseNodes()
         ValidateNode(&root);
 	}
 
-    return rootNodes;
+    if (rootNodes.size() != 1)
+    {
+        Node rootNode = Node(nullptr, "html", highestID++);
+        rootNode.children = rootNodes;
+        return rootNode;
+    }
+    else
+    {
+        return rootNodes[0];
+    }
 }
 
-std::vector<Node> ParseNodes(const string& htmlContent)
+Node ParseNodes(const string& htmlContent)
 {
     HTMLTreeBuilder builder = HTMLTreeBuilder(htmlContent);
     return builder.ParseNodes();

@@ -4,12 +4,15 @@
 */
 
 #include "Browser/Tab.h"
+#include "Browser/BrowserConsole.h"
 #include "Util/StringUtils.h"
 #include "Util/ImMath.h"
 #include "UI/PickleGUI.h"
 #include "Node.h"
 #include "Layout.h"
 #include <iostream>
+#include "Util/Fonts.h"
+#include "CSS/CSSBuilder.h"
 
 bool Layout::debuggingLayout = false;
 
@@ -60,8 +63,9 @@ void Layout::WrapNode(Node& node, float parentWidth, float& cursorX, float& curs
 {
     node.layout.contentSize = ImVec2(parentWidth, 0);
     const char* text = node.attributes.at("text").c_str();
+    const char* textStart = text;
     const char* textEnd = text + node.attributes.at("text").size();
-    float fontSize = GetFontSize(node.style, defaultFontSize);
+    float fontSize = GetFontSize(node, defaultFontSize);
     float lineHeight = fontSize;
     float startX = cursorX;
     float startY = cursorY;
@@ -72,12 +76,13 @@ void Layout::WrapNode(Node& node, float parentWidth, float& cursorX, float& curs
         return;
     }
 
-    ImFont* font = PGUI::io->FontDefault;
+    ImFont* font = GetNodeFont(node);
     if (font == nullptr)
     {
         std::cout << "[ERROR] INVALID FONT IN WRAP NODE";
         return;
     }
+    if (font != PGUI::io->FontDefault) BrowserConsole::Log("Layout", "Loaded font");
 
     while (text < textEnd)
     {
@@ -188,11 +193,15 @@ void Layout::CalculateContentSize(Node& node, float parentWidth, Website& websit
     }
     if (node.type == "#text" && node.HasAttribute("text"))
     {
+        //NEVER HAPPENS UNLESS BLOCK OR SOMTHN RN
         const char* text = node.attributes.at("text").c_str();
-        float fontSize = GetFontSize(node.style, defaultFontSize);
+        float fontSize = GetFontSize(node, defaultFontSize);
         if (node.HasStyle("display") && std::get<string>(node.style["display"]) == "inline")
         {
+            ImFont* font = GetNodeFont(node);
+            ImGui::PushFont(font);
             ImVec2 textSize = (ImGui::CalcTextSize(text, nullptr, false, parentWidth) * (fontSize / 20));
+            ImGui::PopFont();
             node.layout.contentSize.y += textSize.y;
             node.layout.contentSize.x = textSize.x;
         }

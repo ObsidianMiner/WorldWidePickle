@@ -162,6 +162,6 @@ inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::func
     if (node.HasAttribute("href")) ProcessLink(bg_min, node, totalImbed);
     if (node.type == "input") DrawInput(node);
 
-    if(Layout::debuggingLayout) DrawDebugBox(bg_min, node, totalImbed, queue, layer);
+    if(Layout::debuggingLayout && renderingTab->hoveringNode == &node) DrawDebugBox(bg_min, node, totalImbed, queue, layer);
     if (node.type == "div") DrawDiv(bg_min, node, totalImbed, queue, layer);
 }

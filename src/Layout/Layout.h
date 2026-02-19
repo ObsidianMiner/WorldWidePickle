@@ -11,6 +11,8 @@ class Layout
 public:
 	//Layout
 	void LayoutChildren(Node& node, float parentWidth, Website& website);
+	Node* GetHover(const ImVec2& cursorPos, Website& website);
+	static bool IsNodeBoundsInPoint(Node& node, const ImVec2& globalPos);
 	static ImVec2 GetGlobalPos(const Node& node);
 	static bool debuggingLayout;
 private:

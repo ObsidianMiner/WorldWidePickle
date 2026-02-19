@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36109.1 d17.14
+VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WorldWidePickle", "WorldWidePickle.vcxproj", "{33E39F4C-277F-4870-AC0D-733AE7C692E5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WWPUnitTests", "WWPUnitTests\WWPUnitTests.vcxproj", "{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WorldWidePickleApp", "WorldWidePickleApp\WorldWidePickleApp.vcxproj", "{CD819E79-61EE-4340-A487-9B5EE5255295}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +25,22 @@ Global
 		{33E39F4C-277F-4870-AC0D-733AE7C692E5}.Release|x64.Build.0 = Release|x64
 		{33E39F4C-277F-4870-AC0D-733AE7C692E5}.Release|x86.ActiveCfg = Release|Win32
 		{33E39F4C-277F-4870-AC0D-733AE7C692E5}.Release|x86.Build.0 = Release|Win32
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Debug|x64.ActiveCfg = Debug|x64
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Debug|x64.Build.0 = Debug|x64
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Debug|x86.ActiveCfg = Debug|Win32
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Debug|x86.Build.0 = Debug|Win32
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Release|x64.ActiveCfg = Release|x64
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Release|x64.Build.0 = Release|x64
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Release|x86.ActiveCfg = Release|Win32
+		{E402DFC3-D992-0FC8-6FC1-0F90C27B2D3B}.Release|x86.Build.0 = Release|Win32
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Debug|x64.ActiveCfg = Debug|x64
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Debug|x64.Build.0 = Debug|x64
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Debug|x86.ActiveCfg = Debug|Win32
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Debug|x86.Build.0 = Debug|Win32
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Release|x64.ActiveCfg = Release|x64
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Release|x64.Build.0 = Release|x64
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Release|x86.ActiveCfg = Release|Win32
+		{CD819E79-61EE-4340-A487-9B5EE5255295}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

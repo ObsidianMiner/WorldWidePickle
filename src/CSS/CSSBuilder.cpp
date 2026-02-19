@@ -102,24 +102,44 @@ unordered_map<string, unordered_map<string, RuleValue>> CSSBuilder::ParseCSS()
 
 string CSSBuilder::CSSString(const unordered_map<string, unordered_map<string, RuleValue>>& styles)
 {
-    string result = "";
-    for (auto& selector : styles)
+    string result;
+    result.reserve(styles.size() * 60);
+    for (const auto& selector : styles)
     {
-        result += + "Selector: " + selector.first + "\n";
-        for (auto& component : selector.second)
+        result += "Selector: " + selector.first + "\n";
+        for (const auto& component : selector.second)
         {
-            if (std::holds_alternative<string>(component.second)) result += '\t' + component.first + ":" + get<string>(component.second) + "\n";
-            if (std::holds_alternative<int>(component.second))result += '\t' + component.first + ":" + to_string(get<int>(component.second)) + "   { int } " + "\n";
-            if (std::holds_alternative<float>(component.second))result += '\t' + component.first + ":" + to_string(get<float>(component.second)) + "   { float } " + "\n";
-            if (std::holds_alternative<ImU32>(component.second))
-            {
-                ImU32 col = get<ImU32>(component.second);
-                string r = to_string((int)((float)((col >> 0) & 0xFF)));
-                string g = to_string((int)((float)((col >> 8) & 0xFF)));
-                string b = to_string((int)((float)((col >> 16) & 0xFF)));
-                result += '\t' + component.first + ":" + " r:" + r + " g:" + g + " b:" + b + "   { color } " + "\n";
-            }
+            result += CSSRuleString(component);
         }
+    }
+    return result;
+}
+string CSSBuilder::CSSRuleString(const std::pair<std::string, RuleValue> component)
+{
+    std::string result = "\t" + component.first + ":";
+    std::visit([&result](const auto& value) {
+        using T = std::decay_t<decltype(value)>;
+        if constexpr (std::is_same_v<T, string>) result += value;
+        if constexpr (std::is_same_v<T, int>) result += std::to_string(value) + "   { int }";
+        if constexpr (std::is_same_v<T, float>) result += std::to_string(value) + "   { float }";
+        if constexpr (std::is_same_v<T, ImU32>) {
+            string r = to_string(((value >> 0) & 0xFF));
+            string g = to_string(((value >> 8) & 0xFF));
+            string b = to_string(((value >> 16) & 0xFF));
+            result += " r:" + r + " g:" + g + " b:" + b + "   { color }";
+        }
+    }, component.second);
+    result += "\n";
+    return result;
+}
+string CSSBuilder::NodeCSSString(const Node* node)
+{
+    if (node->style.empty()) return "";
+    std::string result;
+    result.reserve(node->style.size() * 30);
+    for (const auto& component : node->style)
+    {
+        result += CSSRuleString(component);
     }
     return result;
 }

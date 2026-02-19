@@ -6,6 +6,7 @@
 #include "PickleGUI.h"
 #include <iostream>
 #include <imgui/imgui_internal.h>
+#include <filesystem>
 
 // Forward declarations of helper functions
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -23,11 +24,39 @@ WNDCLASSEXW PGUI::wc = {};
 HWND PGUI::hwnd = nullptr;
 ImVec4 PGUI::clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 ImGuiID PGUI::tabBarDockId;
+Font PGUI::defaultFont;
 
+ImFont* LoadTTFFont(std::string path)
+{
+    std::filesystem::path filePath{ path };
+    if (!std::filesystem::exists(filePath))
+    {
+        throw std::invalid_argument("Could not find font at path: " + path);
+    }
+    PGUI::io->Fonts->AddFontDefault();
+    ImFont* font = PGUI::io->Fonts->AddFontFromFileTTF(path.c_str(), 22.0f);
+    IM_ASSERT(font != nullptr);
+    return font;
+}
+
+Font::Font(std::string regularPath, std::optional<std::string> boldPath, std::optional<std::string> italicPath, std::optional<std::string> boldItalicPath)
+{
+    this->regular = LoadTTFFont(regularPath);
+
+    if (!boldPath.has_value()) bold = regular;
+    else this->bold = LoadTTFFont(*boldPath);
+
+    if (!italicPath.has_value()) italic = regular;
+    else this->italic = LoadTTFFont(*italicPath);
+
+    if (!boldItalicPath.has_value()) boldItalic = regular;
+    else if (boldPath.has_value()) this->boldItalic = this->bold;
+    else if (italicPath.has_value()) this->boldItalic = this->italic;
+    else this->boldItalic = LoadTTFFont(*boldItalicPath);
+}
 
 PGUI::PGUI()
 {
-
     // Make process DPI aware and obtain main monitor scale
     ImGui_ImplWin32_EnableDpiAwareness();
     float main_scale = ImGui_ImplWin32_GetDpiScaleForMonitor(::MonitorFromPoint(POINT{ 0, 0 }, MONITOR_DEFAULTTOPRIMARY));
@@ -91,16 +120,8 @@ PGUI::PGUI()
     // - Read 'docs/FONTS.md' for more instructions and details. If you like the default font but want it to scale better, consider using the 'ProggyVector' from the same author!
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //style.FontSizeBase = 20.0f;
-    
-    io->Fonts->AddFontDefault();
-    ImFont* font = io->Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\segoeui.ttf", 22.0f);
-    IM_ASSERT(font != nullptr);
-    io->FontDefault = font;
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf");
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf");
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf");
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf");
-    //IM_ASSERT(font != nullptr);
+    defaultFont = Font("c:\\Windows\\Fonts\\segoeui.ttf", "Fonts\\Segoe UI Bold.ttf", "Fonts\\Segoe UI Italic.ttf", "Fonts\\Segoe UI Bold Italic.ttf");
+    io->FontDefault = defaultFont.regular;
 }
 // Helper functions
 bool PGUI::CreateDeviceD3D(HWND hWnd)
@@ -308,3 +329,4 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
+

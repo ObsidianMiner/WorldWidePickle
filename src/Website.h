@@ -26,7 +26,7 @@ public:
 	/// Only ever used to diplay it in the debug popout.
 	/// </summary>
 	std::string websiteSource;
-	std::atomic<std::shared_ptr<std::vector<Node>>> nodes;
+	std::atomic<std::shared_ptr<Node>> rootNode;
 	std::unordered_map<std::string, PImage> images;
 	std::unordered_map<std::string, std::unordered_map<std::string, RuleValue>> styles;
 	bool loaded;
@@ -43,7 +43,7 @@ public:
 	/// Getsa a copy of the nodes. Parent pointers are broken though and still point to the original tree!
 	/// </summary>
 	/// <returns></returns>
-	std::shared_ptr<std::vector<Node>> ReadNodes() { return std::make_shared<std::vector<Node>>(*nodes.load()); }
+	std::shared_ptr<Node> ReadTree() { return std::make_shared<Node>(*rootNode.load()); }
 
 	Website(std::string url, Tab* tab);
 	~Website();
@@ -52,7 +52,7 @@ public:
 	const char* getContent() const;
 
 private:
-	void StyleNodes();
+	void StyleAndLayoutNodes();
 };
 PImage LoadImgFromWebsiteURL(const std::string& url);
 

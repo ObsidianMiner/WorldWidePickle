@@ -12,6 +12,8 @@ public:
 	static unordered_map<string, RuleValue> ParseSingleSelector(string css);
 	unordered_map<string, unordered_map<string, RuleValue>> ParseCSS();
 	static string CSSString(const unordered_map<string, unordered_map<string, RuleValue>>& styles);
+	static string CSSRuleString(const std::pair<std::string, RuleValue> component);
+	static string NodeCSSString(const Node* node);
 	CSSBuilder(string css) : css(css), pointer(0), componentStart(0), inSel(false), inUnsupported(false), inComment(false) {}
 private:
 	int pointer;

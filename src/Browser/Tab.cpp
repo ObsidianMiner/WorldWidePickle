@@ -6,7 +6,7 @@
 #include "Tab.h"
 #include "UI/PickleGUI.h"
 #include <chrono>
-#include "../imgui/imgui.h"
+#include "imgui/imgui.h"
 #include "CSS/CSSBuilder.h"
 #include <imgui/imgui_internal.h>
 #include "Util/ImMath.h"
@@ -33,6 +33,7 @@ Tab::Tab(std::string url)
     viewingSource = false;
     viewingDOM = false;
     viewingCSS = false;
+    debuggingHover = false;
     waitingToClose = false;
     attemptingToLoadNewPage = false;
     firstFrame = true;
@@ -84,6 +85,7 @@ void Tab::SetupDocking()
     std::snprintf(cssID, sizeof(cssID), "%s CSS###CSS %d", currentPage->name.c_str(), id);
     std::snprintf(domID, sizeof(domID), "%s DOM###DOM %d", currentPage->name.c_str(), id);
     std::snprintf(sourceID, sizeof(sourceID), "%s Source###Source %d", currentPage->name.c_str(), id);
+    std::snprintf(sourceID, sizeof(sourceID), "%s Source###Hover %d", currentPage->name.c_str(), id);
 
     ImGui::Begin(cssID); ImGui::End();
     ImGui::Begin(domID); ImGui::End();
@@ -123,14 +125,13 @@ void Tab::Render()
 	}
     contentSize = ImGui::GetContentRegionAvail();
 
-    if (currentPage->loaded)
+    if (currentPage->loaded && justResized)
     {
-        std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
-        for (size_t i = 0; i < (*domSnapshot).size(); i++)
-        {
-            currentPage->layout.LayoutChildren((*domSnapshot)[i], contentSize.x, *currentPage);
-        }
-        currentPage->nodes.store(domSnapshot);
+        std::shared_ptr<Node> domSnapshot = currentPage->rootNode.load();
+        currentPage->layout.LayoutChildren(*domSnapshot, contentSize.x, *currentPage);
+
+        currentPage->interpretedDOM = PrintNode(domSnapshot.get(), 0);
+        currentPage->rootNode.store(domSnapshot);
         justResized = false;
     }
 
@@ -163,7 +164,13 @@ void Tab::Render()
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_D, false) && ImGui::IsWindowFocused()) viewingDOM = !viewingDOM;
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_C, false) && ImGui::IsWindowFocused()) viewingCSS = !viewingCSS;
     if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_L, false) && ImGui::IsWindowFocused()) Layout::debuggingLayout = !Layout::debuggingLayout;
+    if (PGUI::io->KeyAlt && ImGui::IsKeyPressed(ImGuiKey_H, false) && ImGui::IsWindowFocused()) debuggingHover = !debuggingHover;
+    hoveringNode = nullptr;
+    if (currentPage != nullptr) hoveringNode = currentPage.get()->layout.GetHover(ImGui::GetMousePos() - ImGui::GetWindowPos(), *currentPage.get());
+
     ImGui::End();
+
+    if (debuggingHover) DisplayHoverDebug();
 
     if (viewingSource) DisplayDebugMenu("Source", currentPage->websiteSource);
     if (viewingDOM) DisplayDebugMenu("DOM", currentPage->interpretedDOM);
@@ -244,16 +251,13 @@ void Tab::RenderURLBar()
 void Tab::DisplayPage()
 {
     std::multimap<int, std::function<void(ImDrawList*)>> draw_queue;
-    std::shared_ptr<std::vector<Node>> domSnapshot = currentPage->nodes.load();
+    std::shared_ptr<Node> domSnapshot = currentPage->rootNode.load();
 
     contentPos = ImGui::GetCursorPos() + ImVec2(0, 20);
     contentScreenPos = ImGui::GetCursorScreenPos() + ImVec2(0, 20);
 
     //Generate Draw Queue
-    for (size_t i = 0; i < (*domSnapshot).size(); i++)
-    {
-        renderer.Render((*domSnapshot)[i], draw_queue, 0);
-    }
+    renderer.Render((*domSnapshot), draw_queue, 0);
     //Draw Everything in the draw queue
     ImDrawList* dl = ImGui::GetWindowDrawList();
     for (auto& pair : draw_queue) {
@@ -278,6 +282,17 @@ void Tab::DisplayDebugMenu(string type, string content)
         ImGuiInputTextFlags_ReadOnly
     );
     ImGui::End();
+}
+
+void Tab::DisplayHoverDebug()
+{
+    std::string content = "Not hovering on a node.";
+    if (hoveringNode != nullptr)
+    {
+        std::string content = std::format("Hovering Node:\nID: {}\nType: {}\n Attributes: {}\n Style {}",
+            hoveringNode->id, hoveringNode->type, PrintNodeAttributes(hoveringNode), CSSBuilder::NodeCSSString(hoveringNode));
+    }
+    DisplayDebugMenu("Hover", content);
 }
 
 void Tab::SwitchPage(std::string url)

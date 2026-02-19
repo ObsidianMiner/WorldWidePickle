@@ -56,7 +56,7 @@ size_t TexWriteCallback(void* contents, size_t size, size_t nmemb, void* userp) 
 
 void SetupCurlHeader(CURL* curl)
 {
-    curl_easy_setopt(curl, CURLOPT_CAINFO, "C:\\Users\\JGEle\\Downloads\\curl-8.16.0_1-win64-mingw(1)\\curl-8.16.0_1-win64-mingw\\bin\\cacert.pem");
+    curl_easy_setopt(curl, CURLOPT_CAINFO, "Cert\\cacert.pem");
     curl_easy_setopt(curl, CURLOPT_USERAGENT, "WorldWidePickle/1.0");
 }
 
@@ -154,6 +154,7 @@ std::string GetTextFromURL(std::string& url, bool isHTMLWebsite)
     CURL* curl;
     CURLcode res;
     curl = curl_easy_init();
+    //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Use this line if you get curl errors to get better debugging info
     if (curl)
     {
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());

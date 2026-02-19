@@ -8,7 +8,6 @@
 #include <variant>
 #include <imgui/imgui.h>
 
-class NodeLayout;
 class ImDrawList;
 class Website;
 
@@ -24,6 +23,8 @@ public:
 	ImVec2 border{ 0.0f, 0.0f };
 	ImVec2 padding{ 0.0f, 0.0f };
 	float posInLine = 0.0f;
+
+	NodeLayout() = default;
 };
 
 struct Node
@@ -38,6 +39,7 @@ public:
 	bool HasAttribute(const std::string attribute) const;
 	bool HasStyle(const std::string s) const;
 	float GetStyleFloat(const std::string& key, float defaultValue = 0.0f) const;
+	
 
 	//Hierarchy
 	Node* parent = nullptr;
@@ -62,4 +64,4 @@ public:
 
 std::string PrintNode(Node* node, int indent);
 
-std::string PrintDOM(std::vector<Node> children);
+std::string PrintNodeAttributes(Node* node);
