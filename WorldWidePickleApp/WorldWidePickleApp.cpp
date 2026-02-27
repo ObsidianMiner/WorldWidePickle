@@ -4,6 +4,7 @@
 */
 
 #include "Browser/Browser.h"
+#include <iostream>
 
 int main(int, char**)
 {

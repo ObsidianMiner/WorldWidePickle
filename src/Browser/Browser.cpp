@@ -33,7 +33,7 @@ void Browser::LoadGlobalStyles()
 }
 void Browser::LoadHomePage()
 {
-    tabs.emplace_back("https://noobyest.itch.io");
+    tabs.emplace_back("C:\\Users\\JGEle\\source\\repos\\WorldWidePickle\\Working\\Test Suite\\05-tables.html");
 }
 void Browser::RenderTabs()
 {

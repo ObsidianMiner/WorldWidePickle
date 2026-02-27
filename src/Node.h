@@ -8,7 +8,7 @@
 #include <variant>
 #include <imgui/imgui.h>
 
-class ImDrawList;
+struct ImDrawList;
 class Website;
 
 #define RuleValue std::variant<std::string, int, float, ImU32>
@@ -45,6 +45,7 @@ public:
 	Node* parent = nullptr;
 	std::vector<Node> children;
 	std::vector<Node*> GetParents();
+	Node* TryGetChildOfType(std::string type);
 	int GetIndexInParent() const;
 
 	NodeLayout layout;

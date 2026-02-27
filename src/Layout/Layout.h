@@ -16,10 +16,11 @@ public:
 	static ImVec2 GetGlobalPos(const Node& node);
 	static bool debuggingLayout;
 private:
-	void CalculateContentSize(Node& node, float parentWidth, Website& website);
+	void CalculateSelfSize(Node& node, float parentWidth, Website& website);
 	void SetMargins(Node& node);
 	bool ShouldGiveAutoMargin(Node& node);
 	//void CalculateChildrenPositionsFlex(Node& node, Website& website);
 	void WrapNode(Node& node, float parentWidth, float& currentX, float& currentY);
 	void CalculateChildrenAutoMargins(Node& node, float parentWidth, Website& website);
+	void LayoutTable(Node& node, float parentWidth, Website& website);
 };

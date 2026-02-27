@@ -124,26 +124,33 @@ PImage LoadImgFromWebsiteURL(const std::string& url) {
         return image;
     }
 
-    int width = 0, height = 0, channels = 0;
-    unsigned char* pixels = stbi_load_from_memory(imageBuffer.data(), imageBuffer.size(), &width, &height, &channels, 4); // force RGBA
-    if (!pixels) {
-        BrowserConsole::Log("Fetch", "Failed to decode image.");
-        return image;
-    }
-
-    ID3D10ShaderResourceView* textureSRV = CreateTextureFromPixels(PGUI::pd3dDevice, pixels, width, height);
-    stbi_image_free(pixels); // Clean up pixel data
-
-    if (!textureSRV) {
-        BrowserConsole::Log("Fetch", "Failed to create directX10 texture.");
-        return image;
-    }
-    image.img = textureSRV;
-    image.width = width;
-    image.height = height;
-    if (image.width == 0 || image.height == 0 || image.img == nullptr)
+    if (url.ends_with("svg"))
     {
-        BrowserConsole::Log("Fetch", "Image invalid");
+
+    }
+    else
+    {
+        int width = 0, height = 0, channels = 0;
+        unsigned char* pixels = stbi_load_from_memory(imageBuffer.data(), imageBuffer.size(), &width, &height, &channels, 4); // force RGBA
+        if (!pixels) {
+            BrowserConsole::Log("Fetch", "Failed to decode image.");
+            return image;
+        }
+
+        ID3D10ShaderResourceView* textureSRV = CreateTextureFromPixels(PGUI::pd3dDevice, pixels, width, height);
+        stbi_image_free(pixels); // Clean up pixel data
+
+        if (!textureSRV) {
+            BrowserConsole::Log("Fetch", "Failed to create directX10 texture.");
+            return image;
+        }
+        image.img = textureSRV;
+        image.width = width;
+        image.height = height;
+        if (image.width == 0 || image.height == 0 || image.img == nullptr)
+        {
+            BrowserConsole::Log("Fetch", "Image invalid");
+        }
     }
 
     return image;

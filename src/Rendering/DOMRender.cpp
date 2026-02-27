@@ -12,6 +12,7 @@
 #include "Util/StringUtils.h"
 #include "Node.h"
 #include "DOMRenderer.h"
+#include "Browser/BrowserConsole.h"
 
 
 
@@ -120,7 +121,7 @@ inline void DOMRenderer::RenderChildren(Node& node, std::multimap<int, std::func
 void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
 {
     auto it = renderingTab->currentPage->images.find(node.attributes["src"]);
-    if (it != renderingTab->currentPage->images.end())
+    if (it != renderingTab->currentPage->images.end() && it->second.img != nullptr)
     {
         PImage* image = &it->second;
         ImVec2 pos = ImGui::GetCursorScreenPos();
@@ -130,7 +131,7 @@ void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::function<void(
         } });
         ImGui::Dummy(img_size);
     }
-    else if (node.attributes.find("alt") != node.attributes.end())
+    else if (node.HasAttribute("alt"))
     {
         RenderText(queue, layer, node.attributes["alt"], IM_COL32(255, 255, 255, 255), node.layout.contentSize);
     }

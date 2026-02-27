@@ -73,10 +73,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>WWP</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)Static\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <TargetName>WWP</TargetName>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)Static\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -152,6 +154,7 @@
     <ClCompile Include="src\CSS\CSSBuilder.cpp" />
     <ClCompile Include="src\Layout\Hover.cpp" />
     <ClCompile Include="src\Layout\LayoutChildren.cpp" />
+    <ClCompile Include="src\Layout\TableLayout.cpp" />
     <ClCompile Include="src\Node.cpp" />
     <ClCompile Include="src\HTML\HTMLBuilder.cpp" />
     <ClCompile Include="src\Rendering\DOMRender.cpp" />
@@ -164,7 +167,6 @@
     <ClCompile Include="src\Browser\Topbar.cpp" />
     <ClCompile Include="src\CSS\UpdateNodeStyle.cpp" />
     <ClCompile Include="src\Website.cpp" />
-    <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\UI\WWPStyles.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -176,6 +178,7 @@
     <ClInclude Include="Libraries\include\imgui\imstb_rectpack.h" />
     <ClInclude Include="Libraries\include\imgui\imstb_textedit.h" />
     <ClInclude Include="Libraries\include\imgui\imstb_truetype.h" />
+    <ClInclude Include="Libraries\include\nanosvg\nanosvg.h" />
     <ClInclude Include="src\Browser\Browser.h" />
     <ClInclude Include="src\Browser\BrowserConsole.h" />
     <ClInclude Include="src\CSS\CSSBuilder.h" />

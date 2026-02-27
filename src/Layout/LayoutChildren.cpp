@@ -79,6 +79,8 @@ inline bool ShouldRenderSpaceBefore(Node& childNode, int childIndex)
     
     return false;
 }
+
+
 /// <summary>
 /// Sets the layout of its children, determening their size and position, and then setting it's own size.
 /// </summary>
@@ -87,6 +89,8 @@ inline bool ShouldRenderSpaceBefore(Node& childNode, int childIndex)
 /// <param name="website"></param>
 void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
 {
+    //All nodes use this
+
     node.layout.contentSize = ImVec2(parentWidth, 0);
     if (node.HasStyle("padding"))
     {
@@ -94,6 +98,16 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
         node.layout.padding = ImVec2(paddingAmount, paddingAmount);
     }
     SetMargins(node);
+
+    //Exceptions
+
+    if (node.type == "table")
+    {
+        LayoutTable(node, parentWidth, website);
+        return;
+    }
+
+    //Normal LayoutChildren
 
     float cursorY = 0;
     float cursorX = 0;
@@ -144,7 +158,7 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
                 
                 ImFont* font = GetNodeFont(child);
                 WrapNode(child, parentWidth, cursorX, cursorY);
-                //CalculateContentSize(child, parentWidth, website);
+                //CalculateSelfSize(child, parentWidth, website);
 
                 cursorX += child.layout.bottomRightMargin.x + child.layout.border.x;
                 currentLineHeight = std::max(currentLineHeight, child.layout.contentSize.y);
@@ -171,5 +185,5 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
     {
         node.layout.contentSize.x = farthestRight;
     }
-    CalculateContentSize(node, parentWidth, website);
+    CalculateSelfSize(node, parentWidth, website);
 }

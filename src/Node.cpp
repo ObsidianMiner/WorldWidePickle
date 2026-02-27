@@ -111,6 +111,14 @@ std::string PrintNodeAttributes(Node* node)
     }
     return result;
 }
+Node* Node::TryGetChildOfType(std::string type)
+{
+    for (size_t i = 0; i < children.size(); i++)
+    {
+        if (children[i].type == type) return &children[i];
+    }
+    return nullptr;
+}
 bool operator==(const Node& node1, const Node& node2)
 {
     return node1.type == node2.type && node1.attributes == node2.attributes && node1.children.size() == node2.children.size();

@@ -84,6 +84,7 @@ void Website::StyleAndLayoutNodes()
     (*styledNodes).UpdateStyle(*this, emptyStyle);
     FixParentPointers(*styledNodes, nullptr);
     layout.LayoutChildren(*styledNodes, tab->contentSize.x, *this);
+    interpretedDOM = PrintNode((styledNodes.get()), 0);
     rootNode.store(styledNodes);
 }
 

@@ -82,7 +82,6 @@ void Layout::WrapNode(Node& node, float parentWidth, float& cursorX, float& curs
         std::cout << "[ERROR] INVALID FONT IN WRAP NODE";
         return;
     }
-    if (font != PGUI::io->FontDefault) BrowserConsole::Log("Layout", "Loaded font");
 
     while (text < textEnd)
     {
@@ -175,7 +174,7 @@ void Layout::CalculateChildrenAutoMargins(Node& node, float parentWidth, Website
 /// <param name="node"></param>
 /// <param name="parentWidth"></param>
 /// <param name="website"></param>
-void Layout::CalculateContentSize(Node& node, float parentWidth, Website& website)
+void Layout::CalculateSelfSize(Node& node, float parentWidth, Website& website)
 {
     if (node.type == "div")
     {
