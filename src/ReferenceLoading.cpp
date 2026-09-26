@@ -11,7 +11,16 @@
 std::string GetRealURL(const std::string& possiblyRelativeURL, Website& website)
 {
     std::string realImgURL = possiblyRelativeURL;
-    if (realImgURL.find("http") == std::string::npos)
+
+    if (realImgURL.starts_with("//"))
+    {
+        realImgURL = "https:" + realImgURL; // Sometiems links will start with // to conotate either https or http depending on what it is right now, we simply assume https.
+    }
+    if (realImgURL.starts_with(".."))
+    {
+        realImgURL = website.url + realImgURL.substr(2); // Cut of the ..
+    }
+    if (!realImgURL.starts_with("http"))
     {
         if (realImgURL[0] != '/')
         {

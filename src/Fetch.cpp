@@ -12,7 +12,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 #include "UI/PickleGUI.h"
-
+#include "Browser/Tab.h"
 
 using namespace std;
 
@@ -27,8 +27,12 @@ std::string GetTextFromFile(const std::string& url)
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 }
 
-std::string GetTextFromFileOrURL(std::string& url, bool isHTMLWebsite)
+std::string GetTextFromFileOrURL(std::string& url, bool isHTMLWebsite, Website* website)
 {
+    if (url.rfind("pbrowser://", 0) == 0 && website != nullptr && website->tab != nullptr)
+    {
+        return website->tab->GetPageFromCache(url);
+    }
     if (url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0)
     {
         return GetTextFromURL(url, isHTMLWebsite);

@@ -28,10 +28,9 @@ inline bool TryCastToInt(std::string s, int& result) {
 
 	result = static_cast<int>(val);  
 	return true;  
-}  
-
+}
 inline bool TryCastToFloat(std::string& s, float& result) {  
-	bool isPercentage = s[s.size() - 1] == '%';  
+	bool isPercentage = s[s.size() - 1] == '%';
 	if (isPercentage)  
 	{  
 		s.resize(s.size() - 1);  
@@ -50,5 +49,17 @@ inline bool TryCastToFloat(std::string& s, float& result) {
 
 	result = static_cast<float>(val);  
 	return true;  
+}
+inline bool TryCastPercentage(std::string& s, Percentage& result)
+{
+	bool isPercentage = s[s.size() - 1] == '%';
+	if (isPercentage)
+	{
+		float floatRatio;
+		TryCastToFloat(s, floatRatio);
+		result = Percentage(floatRatio);
+		return true;
+	}
+	return false;
 }
 

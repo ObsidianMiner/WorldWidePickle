@@ -7,7 +7,7 @@
 class BrowserConsole
 {
 	BrowserConsole() {}
-	bool m_verboseMode = false;
+	bool m_verboseMode = true;
 	mutable std::mutex m_logMutex;
 	void BaseLog(const std::string_view source, const std::string_view log, const std::string_view color, bool verboseOnly = false);
 public:

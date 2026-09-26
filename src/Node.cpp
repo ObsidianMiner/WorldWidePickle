@@ -36,7 +36,16 @@ float Node::GetStyleFloat(const std::string& key, float defaultValue) const
     if (std::holds_alternative<float>(val)) return std::get<float>(val);
     return defaultValue;
 }
+float Node::GetStyleFloatAllowPercent(const std::string& key, float defaultValue, float whole) const
+{
+    if (!HasStyle(key)) return defaultValue;
 
+    const auto& val = style.at(key);
+    if (std::holds_alternative<int>(val)) return static_cast<float>(std::get<int>(val));
+    if (std::holds_alternative<float>(val)) return std::get<float>(val);
+    if (std::holds_alternative<Percentage>(val)) return std::get<Percentage>(val).percent * whole;
+    return defaultValue;
+}
 
 
 /// <summary>
@@ -63,6 +72,19 @@ Node* Node::GetParentNodeOfType(std::string type)
         currentParent = currentParent->parent;
     }
     return nullptr;
+}
+std::vector<std::string> GetSelectOptions(Node& node)
+{
+    std::vector <std::string> options;
+    for (size_t i = 0; i < node.children.size(); i++)
+    {
+        Node* child = node.children[i].get();
+        if (child->children.size() == 1 && child->children[0].get()->type == "#text")
+        {
+            options.push_back(child->children[0].get()->attributes["text"]);
+        }
+    }
+    return options;
 }
 int Node::GetIndexInParent() const
 {

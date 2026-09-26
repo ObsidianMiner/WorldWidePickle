@@ -45,14 +45,15 @@ public:
 	/// <summary>
 	/// Used in building passes to work on a clone of the tree before swaping it.
 	/// </summary>
-	std::unique_ptr<Node> CloneTree(const Node& node, Node* newParent);
+	std::unique_ptr<Node> CloneTree(const Node& node, Node* newParent) const;
 
-	Node* GetNodeFromIdInChildren(Node* node, int id);
+	Node* GetNodeFromIdInChildren(Node* node, int id) const;
+	std::string ConvertRelativeURLs(std::string url) const;
 
-	Website(std::string url, Tab* tab);
+	Website(std::string url, Tab* tab, std::string cachedContents);
 	~Website();
 	void InitalizeMutableData(Node& node, bool recursive);
-	void FetchContent();
+	void FetchContent(std::string cachedContent);
 	void CreateRawTextVersion();
 	const char* getContent() const;
 
@@ -64,4 +65,4 @@ PImage LoadImgFromWebsiteURL(const std::string& url);
 /// <summary>The URL can be modified if a redirect is nessasary.</summary>/// <param name="url"></param>/// <param name="isHTMLWebsite"></param>/// <returns></returns>
 std::string GetTextFromURL(std::string& url, bool isHTMLWebsite = false);
 
-std::string GetTextFromFileOrURL(std::string& url, bool isHTMLWebsite = false);
+std::string GetTextFromFileOrURL(std::string& url, bool isHTMLWebsite = false, Website* website = nullptr);

@@ -22,7 +22,7 @@ inline void HTMLTreeBuilder::AddAttributeOrType()
         int startChar = buildingPropertyStart + 1;
         string attributePortion = htmlContent.substr(startChar, pointer - startChar - 1);
         int equalIndex = attributePortion.find('=');
-        if (equalIndex != -1)
+        if (equalIndex != -1 && equalIndex != attributePortion.size() - 1)
         {
             buildingNode->attributes.emplace(attributePortion.substr(1, equalIndex - 1), attributePortion.substr(equalIndex + 2));
         }
@@ -187,8 +187,20 @@ void HTMLTreeBuilder::EndCDATA()
     currentContext->attributes.emplace("CDATA", CDATAContent);
     lastEndTagPos = pointer;
 }
+void HandleNonBreakingSpaces(std::string& htmlContent)
+{
+    if (htmlContent.empty()) return;
+    const std::string from = "&nbsp;";
+    size_t startPos = 0;
+    while ((startPos = htmlContent.find(from, startPos)) != std::string::npos) {
+        // Replace 'from.length()' characters starting at 'start_pos' with 1 copy of 'to_char'
+        htmlContent.replace(startPos, from.length(), 1, ' ');
+        startPos += 1;
+    }
+}
 std::unique_ptr<Node> HTMLTreeBuilder::ParseNodes()
 {
+    HandleNonBreakingSpaces(htmlContent);
     while (pointer < htmlContent.length())
     {
         if (readingCDATA)
@@ -240,7 +252,7 @@ std::unique_ptr<Node> HTMLTreeBuilder::ParseNodes()
     return std::move(rootNodes[0]);
 }
 
-std::unique_ptr<Node> ParseNodes(const string& htmlContent)
+std::unique_ptr<Node> ParseNodes(string& htmlContent)
 {
     HTMLTreeBuilder builder = HTMLTreeBuilder(htmlContent);
     return builder.ParseNodes();

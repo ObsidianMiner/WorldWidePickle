@@ -18,11 +18,13 @@ char tryNewTabBuffer[256];
 Tab* renderingTab;
 
 
+const std::string protocolName = "pbrowser://";
+
 Tab::Tab(std::string url)
 {
     strncpy_s(urlBuffer, url.c_str(), sizeof(urlBuffer) - 1);
     currentURL = urlBuffer;
-    currentPage = std::make_unique<Website>(urlBuffer, this);
+    currentPage = std::make_unique<Website>(urlBuffer, this, "");
     auto current_time = std::chrono::high_resolution_clock::now();
     maxTabID++;
     this->id = maxTabID;
@@ -147,7 +149,14 @@ void Tab::Render()
     {
         if(!attemptingToLoadFromHistory) urlHistory.push_back(currentURL);
         currentURL = urlBuffer;
-        currentPage = std::make_unique<Website>(urlBuffer, this);
+        std::string cachedPage = "";
+        if (currentURL.starts_with("pbrowser://"))
+        {
+            cachedPage = GetPageFromCache(currentURL);
+            currentURL = GetPageURLFromCacheURL(currentURL);
+            strncpy_s(urlBuffer, currentURL.c_str(), sizeof(urlBuffer) - 1);
+        }
+        currentPage = std::make_unique<Website>(urlBuffer, this, cachedPage);
         attemptingToLoadNewPage = false;
         attemptingToLoadFromHistory = false;
     }
@@ -192,7 +201,7 @@ void Tab::OnPageLoaded()
         size_t urlEnd = currentPage->content.find('"', urlStart);
         std::string url = currentPage->content.substr(urlStart, urlEnd);
         currentURL = url;
-        currentPage = std::make_unique<Website>(url, this);
+        currentPage = std::make_unique<Website>(url, this, "");
     }
 }
 void Tab::UpdateDocking()
@@ -269,6 +278,23 @@ void Tab::DisplayPage()
     for (auto& pair : draw_queue) {
         pair.second(dl);
     }
+}
+void Tab::AddAndDisplayCachedPage(std::string originalURL, std::string cachedPage)
+{
+    std::string cachedPageURL = "pbrowser://" + originalURL + "\t(Cached " + std::to_string(this->cachedPages.size()) + ")";
+    this->cachedPages.emplace(cachedPageURL, cachedPage);
+
+    currentURL = cachedPageURL;
+    strncpy_s(urlBuffer, currentURL.c_str(), sizeof(urlBuffer) - 1);
+    attemptingToLoadNewPage = true;
+}
+std::string Tab::GetPageFromCache(std::string name)
+{
+    return cachedPages[name];
+}
+std::string Tab::GetPageURLFromCacheURL(std::string name)
+{
+    return name.substr(protocolName.size(), name.find('\t'));
 }
 void Tab::DisplayDebugMenu(string type, string content)
 {

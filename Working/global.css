@@ -10,7 +10,9 @@ a { color: LightSeaGreen; display:inline; }
 span {display: inline;}
 nobr { white-space: nowrap;}
 center { margin: auto; text-align: center;}
+b { display:inline;}
 strong {display: inline;font-style: bold;}
 em {display: inline;font-style: italic;}
 p {margin-top: 6px; margin-bottom: 6px;}
-input { width: 309px; height: 15px; }
+input { width: 309px; height: 30px; display: inline; }
+select {display : inline; }

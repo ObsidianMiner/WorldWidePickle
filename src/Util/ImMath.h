@@ -33,3 +33,12 @@ inline ImVec2& operator-=(ImVec2& lhs, const ImVec2& rhs) {
     lhs.y -= rhs.y;
     return lhs;
 }
+
+inline ImVec2 ImVMax(const ImVec2& lhs, const ImVec2& rhs)
+{
+    return ImVec2(lhs.x > rhs.x ? lhs.x : rhs.x, lhs.y > rhs.y ? lhs.y : rhs.y);
+}
+inline ImVec2 ImVMin(const ImVec2& lhs, const ImVec2& rhs)
+{
+    return ImVec2(lhs.x < rhs.x ? lhs.x : rhs.x, lhs.y < rhs.y ? lhs.y : rhs.y);
+}

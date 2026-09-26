@@ -170,6 +170,29 @@ void Layout::CalculateChildrenAutoMargins(Node& node, float parentWidth, Website
     }
     ApplyAutoMargins(autoMarginedChildren, currentX, parentWidth);
 }
+
+ImVec2 TextSizeForNonTextNode(Node& node, std::string textStr)
+{
+    float fontSize = GetFontSize(node, GetFontSize(node, defaultFontSize));
+    const char* text = textStr.c_str();
+    const char* textEnd = text + textStr.size();
+
+    if (text == textEnd)
+    {
+        std::cerr << "[ERROR] INVALID TEXT IN WRAP NODE";
+        return ImVec2(0, 0);
+    }
+
+    ImFont* font = GetNodeFont(node);
+    if (font == nullptr)
+    {
+        std::cerr << "[ERROR] INVALID FONT IN WRAP NODE";
+        return ImVec2(0,0);
+    }
+
+    return font->CalcTextSizeA(fontSize, FLT_MAX, FLT_MAX, textStr.c_str());
+}
+
 /// <summary>
 /// Gets the size of the element, not including that of the children. div's size is set to their parentsWidth.
 /// Currently gets last say on the size of an object.
@@ -199,32 +222,20 @@ void Layout::CalculateSelfSize(Node& node, float parentWidth, Website& website)
         {
             std::string btn_label = "Button";
             if (node.HasAttribute("value")) btn_label = node.attributes["value"];
+            node.layout.contentSize = TextSizeForNonTextNode(node, btn_label);
+            node.layout.contentSize.x += 10.0f;
+            node.layout.contentSize.y += 10.0f;
+        }
+        else if (node.HasAttribute("type") && node.attributes["type"] == "hidden")
+        {
 
-            float fontSize = GetFontSize(node, GetFontSize(node, defaultFontSize));
-            const char* text = btn_label.c_str();
-            const char* textEnd = text + btn_label.size();
-
-            if (text == textEnd)
-            {
-                std::cerr << "[ERROR] INVALID TEXT IN WRAP NODE";
-                return;
-            }
-
-            ImFont* font = GetNodeFont(node);
-            if (font == nullptr)
-            {
-                std::cerr << "[ERROR] INVALID FONT IN WRAP NODE";
-                return;
-            }
-
-            ImVec2 textSize = font->CalcTextSizeA(fontSize, FLT_MAX, FLT_MAX, btn_label.c_str());
-            node.layout.contentSize.x = textSize.x + 10.0f;
-            node.layout.contentSize.y = textSize.y + 10.0f;
         }
         else
         {
-            node.layout.contentSize.y = 20.0f;
+            node.layout.contentSize.y = 30.0f;
             node.layout.contentSize.x = 200.0f;
+            node.layout.contentSize.x = node.GetStyleFloatAllowPercent("width", node.layout.contentSize.x, parentWidth);
+            node.layout.contentSize.y = node.GetStyleFloat("height", node.layout.contentSize.y);
         }
     }
     if (node.type == "#text" && node.HasAttribute("text"))
@@ -251,5 +262,15 @@ void Layout::CalculateSelfSize(Node& node, float parentWidth, Website& website)
     if (node.type == "title")
     {
         node.layout.contentSize = ImVec2(0, 0);
+    }
+    if (node.type == "select")
+    {
+        std::vector<std::string> options = GetSelectOptions(node);
+        for (size_t i = 0; i < options.size(); i++)
+        {
+            node.layout.contentSize = ImVMax(node.layout.contentSize, TextSizeForNonTextNode(node, options[i]));
+        }
+        node.layout.contentSize.x += 10.0f;
+        node.layout.contentSize.y += 10.0f;
     }
 }

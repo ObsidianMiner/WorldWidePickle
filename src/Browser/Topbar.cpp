@@ -14,7 +14,7 @@ void TopBar::RenderTopBar()
     ImGui::Begin("TopBar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiDockNodeFlags_HiddenTabBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
     if (ImGui::Button("Create New Tab"))
     {
-        tabs.emplace_back("http://example.com");
+        tabs.emplace_back("http://html.duckduckgo.com/lite");
     }
     ImGui::SameLine();
     if (ImGui::Button("Help"))

@@ -25,6 +25,9 @@ public:
 	void Render();
 	void RenderURLBar();
 	void DisplayPage();
+	void AddAndDisplayCachedPage(std::string name, std::string cachedPage);
+	std::string GetPageFromCache(std::string name);
+	std::string GetPageURLFromCacheURL(std::string name);
 	void SwitchPage(string url);
 private:
 	ImVec2 winSize;
@@ -43,6 +46,7 @@ private:
 	bool attemptingToLoadFromHistory;
 	bool justResized;
 	vector<string> urlHistory;
+	std::unordered_map<std::string, std::string> cachedPages;
 	void SetupDocking();
 	void OnResize();
 	void OnPageLoaded();

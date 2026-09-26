@@ -108,6 +108,7 @@ void Layout::FullLayoutPass(Node& node, float parentWidth, Website& website)
         LayoutTable(node, parentWidth, website);
         return;
     }
+    if (node.type == "option") return;
 
     //Normal FullLayoutPass
 

@@ -14,7 +14,7 @@
 #include "HTML/DOMBuilder.h"
 
 
-std::unique_ptr<Node> Website::CloneTree(const Node& node, Node* newParent)
+std::unique_ptr<Node> Website::CloneTree(const Node& node, Node* newParent) const
 {
     auto copy = node.CrClone();
     copy->parent = newParent;
@@ -26,7 +26,7 @@ std::unique_ptr<Node> Website::CloneTree(const Node& node, Node* newParent)
     return copy;
 }
 
-Node* Website::GetNodeFromIdInChildren(Node* node, int id)
+Node* Website::GetNodeFromIdInChildren(Node* node, int id) const
 {
     if (node->id == id) return node;
     for (size_t i = 0; i < node->children.size(); i++)
@@ -38,7 +38,16 @@ Node* Website::GetNodeFromIdInChildren(Node* node, int id)
     return nullptr;
 }
 
-Website::Website(std::string url, Tab* tab)
+std::string Website::ConvertRelativeURLs(std::string url) const
+{
+    if (url.size() > 0 && url[0] == '/')
+    {
+        url.insert(0, this->url);
+    }
+    return url;
+}
+
+Website::Website(std::string url, Tab* tab, std::string cachedContents)
 {
     fullyLoaded = false;
     wasLoaded = false;
@@ -50,7 +59,7 @@ Website::Website(std::string url, Tab* tab)
     styles = globalStyles;
     nextNodeID = 0;
     rootNode = std::make_shared<Node>(nullptr, "rootHTML", nextNodeID++);
-	std::thread(&Website::FetchContent, this).detach();
+	std::thread(&Website::FetchContent, this, cachedContents).detach();
     layout = Layout();
     debugDOMViewer = DebugDOMViewer();
 }
@@ -79,6 +88,10 @@ void Website::InitalizeMutableData(Node& node, bool recursive)
     {
         mutableState.try_emplace(node.id, std::make_unique<TextInputMutableState>(TextInputMutableState()));
     }
+    if (node.type == "select")
+    {
+        mutableState.try_emplace(node.id, std::make_unique<SelectMutableState>(SelectMutableState()));
+    }
     if (recursive)
     {
         for (size_t i = 0; i < node.children.size(); i++)
@@ -90,13 +103,22 @@ void Website::InitalizeMutableData(Node& node, bool recursive)
 /// <summary>
 /// Ran in a seperate thread, to fetch, source -> nodes -> references (img/css/js/ect.) -> Styles Page
 /// </summary>
-void Website::FetchContent()
+void Website::FetchContent(std::string cachedContent)
 {
     //Source
-    BrowserConsole::GetInstance().Log("Fetch", "Fetching URL: " + url, true);
-    content = GetTextFromFileOrURL(url, true);
-	CreateRawTextVersion();
-    BrowserConsole::GetInstance().Log("Fetch", "Fetched HTML from: " + url, true);
+    if (!cachedContent.empty())
+    {
+        BrowserConsole::GetInstance().Log("Fetch", "HTML Content aquired from cache.", true);
+        content = cachedContent;
+        CreateRawTextVersion();
+    }
+    else
+    {
+        BrowserConsole::GetInstance().Log("Fetch", "Fetching URL: " + url, true);
+        content = GetTextFromFileOrURL(url, true, this);
+        CreateRawTextVersion();
+        BrowserConsole::GetInstance().Log("Fetch", "Fetched HTML from: " + url, true);
+    }
     //Nodes
     std::shared_ptr<Node> parsedTreeRoot = ParseNodes(content);
     InitalizeMutableData(*parsedTreeRoot, true);

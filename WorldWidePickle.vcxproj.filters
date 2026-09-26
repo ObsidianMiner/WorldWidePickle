@@ -108,6 +108,9 @@
     <ClCompile Include="src\HTML\DeubgDOMViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Dynamic\Forms.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\UI\PickleGUI.h">
@@ -183,6 +186,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\HTML\DebugDOMViewer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Dynamic\Forms.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

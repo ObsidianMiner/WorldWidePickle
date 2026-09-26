@@ -128,6 +128,7 @@ string CSSBuilder::CSSRuleString(const std::pair<std::string, RuleValue> compone
             string b = to_string(((value >> 16) & 0xFF));
             result += " r:" + r + " g:" + g + " b:" + b + "   { color }";
         }
+        if constexpr (std::is_same_v<T, Percentage>) result += std::to_string(value.percent * 100.0f) + "%   { percent }";
     }, component.second);
     result += "\n";
     return result;
@@ -217,9 +218,14 @@ void CSSBuilder::ParseValue(RuleValue& component, string value)
     int valueInt = 0;
     float valueFloat = 0.0f;
     ImU32 valueCol = 0;
+    Percentage valuePercent = Percentage(0);
     if (TryCastToInt(value, valueInt))
     {
         component = valueInt;
+    }
+    else if (TryCastPercentage(value, valuePercent))
+    {
+        component = valuePercent;
     }
     else if (TryCastToFloat(value, valueFloat))
     {

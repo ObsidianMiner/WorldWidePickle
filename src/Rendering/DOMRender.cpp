@@ -13,8 +13,12 @@
 #include "Node.h"
 #include "DOMRenderer.h"
 #include "Browser/BrowserConsole.h"
+#include <Dynamic/Forms.h>
 
-
+inline bool NodeCantRender(Node& node)
+{
+    return node.type == "option" || node.type == "head";
+}
 
 /// <summary>
 /// Renders a node, and all of it's children. The main inlit to all site rendering.
@@ -24,7 +28,7 @@
 /// <param name="layer">Which layer should this node be rendered on.</param>
 void DOMRenderer::Render(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
 {
-    if (node.type == "head") return;
+    if (NodeCantRender(node)) return;
 
 	//if (HasStyle("padding")) padding = ImVec2(std::get<int>(style["padding"]), std::get<int>(style["padding"]));
     ImVec2 totalImbed = node.layout.padding + node.layout.border;
@@ -64,11 +68,29 @@ void DOMRenderer::ProcessLink(const ImVec2& bg_min, Node& node, const ImVec2& to
         }
     }
 }
+void DOMRenderer::DrawSelect(Node& node)
+{
+    std::vector<std::string> options = GetSelectOptions(node);
+    SelectMutableState* mutState = static_cast<SelectMutableState*>(renderingTab->currentPage->mutableState.at(node.id).get());
+
+    if (ImGui::BeginCombo(("###" + std::to_string(node.id)).c_str(), mutState->selectedName.c_str()))
+    {
+        for (size_t i = 0; i < options.size(); i++)
+        {
+            if (ImGui::Selectable(options[i].c_str(), options[i] == mutState->selectedName))
+            {
+                mutState->selectedName = options[i];
+            }
+            if (mutState->selectedName == options[i]) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+}
 void DOMRenderer::DrawInput(Node& node)
 {
     if (node.HasAttribute("type") && (node.attributes["type"] == "button" || node.attributes["type"] == "submit"))
     {
-        ImVec2 btn_size = ImGui::GetItemRectSize();
+        ImVec2 btn_size = node.layout.contentSize;
         ImVec2 btn_pos = ImGui::GetItemRectMin();
         std::string btn_label = "Button";
         if (node.HasAttribute("value")) btn_label = node.attributes["value"];
@@ -80,6 +102,11 @@ void DOMRenderer::DrawInput(Node& node)
                 /*
                 std::string js = attributes["onclick"];
                 JSEngine::ExecuteJS(js, renderingTab);*/
+            }
+            Node* possibleFormParent = node.GetParentNodeOfType("form");
+            if (possibleFormParent != nullptr)
+            {
+                SubmitForm(possibleFormParent, *renderingTab->currentPage);
             }
         }
     }
@@ -95,12 +122,11 @@ void DOMRenderer::DrawInput(Node& node)
             TryCastToInt(node.attributes["maxlength"], maxValueLength);
         }
         static char buffer[256] = "";
-        ImVec2 input_size = ImGui::GetItemRectSize();
+        ImVec2 input_size = node.layout.contentSize;
         ImVec2 input_pos = ImGui::GetItemRectMin();
+        input_pos += ImVec2(0.0f, 8.0f);
         ImGui::SetCursorScreenPos(input_pos);
-        ImGui::PushItemWidth(input_size.x);
-        ImGui::InputText(("##" + std::to_string(node.id)).c_str(), buffer, sizeof(buffer));
-        ImGui::PopItemWidth();
+        ImGui::InputTextMultiline(("##" + std::to_string(node.id)).c_str(), buffer, sizeof(buffer), node.layout.contentSize);
         static_cast<TextInputMutableState*>(renderingTab->currentPage->mutableState[node.id].get())->inputText = std::string(buffer);
     }
 }
@@ -173,6 +199,7 @@ inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::func
 
     if (node.HasAttribute("href")) ProcessLink(bg_min, node, totalImbed);
     if (node.type == "input") DrawInput(node);
+    if (node.type == "select") DrawSelect(node);
 
     if (Layout::debuggingLayout && renderingTab->hoveringNode == &node)
     {

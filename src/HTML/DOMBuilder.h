@@ -5,13 +5,13 @@ struct HTMLTreeBuilder
 {
 public:
 	std::unique_ptr<Node> ParseNodes();
-	HTMLTreeBuilder(const std::string& html) : htmlContent(html) {}
+	HTMLTreeBuilder(std::string& html) : htmlContent(html) {}
 private:
 	void StartTag();
 	void AddAttributeOrType();
 	void EndTag();
 	void EndCDATA();
-	const std::string& htmlContent;
+	std::string& htmlContent;
 	int pointer = 0;
 	int buildingNodeStart = 0;
 	int buildingPropertyStart = 0;
@@ -26,4 +26,4 @@ private:
 	int lastEndTagPos = 0;
 	int nextNodeID = 0;
 };
-std::unique_ptr<Node> ParseNodes(const std::string& htmlContent);
+std::unique_ptr<Node> ParseNodes(std::string& htmlContent);

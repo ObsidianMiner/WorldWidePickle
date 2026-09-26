@@ -12,7 +12,14 @@
 struct ImDrawList;
 class Website;
 
-#define RuleValue std::variant<std::string, int, float, ImU32>
+struct Percentage
+{
+public:
+	float percent = 0;
+	Percentage(float percentVal) { this->percent = percentVal; }
+};
+
+#define RuleValue std::variant<std::string, int, float, ImU32, Percentage>
 
 class NodeLayout
 {
@@ -44,7 +51,7 @@ struct CheckboxInputMutableState : NodeMutableState
 };
 struct SelectMutableState : NodeMutableState
 {
-	int selectedNodeId;
+	std::string selectedName;
 };
 struct Node
 {
@@ -58,6 +65,7 @@ public:
 	bool HasAttribute(const std::string attribute) const;
 	bool HasStyle(const std::string s) const;
 	float GetStyleFloat(const std::string& key, float defaultValue = 0.0f) const;
+	float GetStyleFloatAllowPercent(const std::string& key, float defaultValue, float whole) const;
 	
 
 	//Hierarchy
@@ -108,3 +116,5 @@ inline PrintNodeInfo operator&(PrintNodeInfo lhs, PrintNodeInfo rhs)
 std::string PrintNode(Node* node, int indent, int maxDetph = 999, PrintNodeInfo infoFlags = PrintNodeInfo::None);
 
 std::string PrintNodeAttributes(Node* node);
+
+std::vector<std::string> GetSelectOptions(Node& node);
