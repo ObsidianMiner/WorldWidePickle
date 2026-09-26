@@ -8,6 +8,7 @@
 #include <atomic>
 #include <memory>
 #include <Layout/Layout.h>
+#include <HTML/DebugDOMViewer.h>
 
 struct PImage
 {
@@ -29,30 +30,34 @@ public:
 	std::atomic<std::shared_ptr<Node>> rootNode;
 	std::unordered_map<std::string, PImage> images;
 	std::unordered_map<std::string, std::unordered_map<std::string, RuleValue>> styles;
-	bool loaded;
+	std::unordered_map<int, std::unique_ptr<NodeMutableState>> mutableState;
+	bool fullyLoaded;
 	bool wasLoaded;
-	int highestID;
+	int nextNodeID;
 	Tab* tab;
 
 	Layout layout;
 
+	DebugDOMViewer debugDOMViewer;
 	std::string interpretedDOM;
 	std::string interpretedCSS;
 
 	/// <summary>
-	/// Getsa a copy of the nodes. Parent pointers are broken though and still point to the original tree!
+	/// Used in building passes to work on a clone of the tree before swaping it.
 	/// </summary>
-	/// <returns></returns>
-	std::shared_ptr<Node> ReadTree() { return std::make_shared<Node>(*rootNode.load()); }
+	std::unique_ptr<Node> CloneTree(const Node& node, Node* newParent);
+
+	Node* GetNodeFromIdInChildren(Node* node, int id);
 
 	Website(std::string url, Tab* tab);
 	~Website();
+	void InitalizeMutableData(Node& node, bool recursive);
 	void FetchContent();
 	void CreateRawTextVersion();
 	const char* getContent() const;
 
 private:
-	void StyleAndLayoutNodes();
+	void StyleAndLayoutNodes(std::shared_ptr<Node> tree);
 };
 PImage LoadImgFromWebsiteURL(const std::string& url);
 

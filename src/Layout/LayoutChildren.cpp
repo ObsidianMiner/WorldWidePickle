@@ -1,5 +1,5 @@
 /**
-* @file LayoutChildren.cpp
+* @file FullLayoutPass.cpp
 * @brief Determines the layout of children
 */
 
@@ -44,7 +44,7 @@ inline bool ShouldRenderSpaceBefore(Node& childNode, int childIndex)
         // If we're not the first child, check the previous sibling
         if (currentIndex > 0)
         {
-            Node& previousSibling = (parent->children[currentIndex - 1]);
+            Node& previousSibling = *(parent->children[currentIndex - 1]);
 
             //If we pass by a block, it must mean there is a new line inbetween them, and a space should not be inserted
             if (!IsInlineDisplay(previousSibling)) return false;
@@ -58,7 +58,7 @@ inline bool ShouldRenderSpaceBefore(Node& childNode, int childIndex)
             // Find the last descendant of the previous sibling
             Node* lastDescendant = &previousSibling;
             while (!lastDescendant->children.empty()) {
-                lastDescendant = &lastDescendant->children.back();
+                lastDescendant = lastDescendant->children.back().get();
                 //If we pass by a block, it must mean there is a new line inbetween them, and a space should not be inserted
                 if (!IsInlineDisplay(*lastDescendant)) return false;
 
@@ -87,9 +87,11 @@ inline bool ShouldRenderSpaceBefore(Node& childNode, int childIndex)
 /// <param name="node"></param>
 /// <param name="parentWidth"></param>
 /// <param name="website"></param>
-void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
+void Layout::FullLayoutPass(Node& node, float parentWidth, Website& website)
 {
     //All nodes use this
+
+    GetMinMaxSize(node, website);
 
     node.layout.contentSize = ImVec2(parentWidth, 0);
     if (node.HasStyle("padding"))
@@ -107,7 +109,7 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
         return;
     }
 
-    //Normal LayoutChildren
+    //Normal FullLayoutPass
 
     float cursorY = 0;
     float cursorX = 0;
@@ -116,10 +118,11 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
 
     for (size_t i = 0; i < node.children.size(); i++)
     {
-        Node& child = node.children[i];
+        Node& child = *node.children[i];
 
+        // If this child starts a new block.
         bool blockDisplay = true;
-        if (node.children[i].HasStyle("display") && std::get<string>(child.style["display"]) == "inline") blockDisplay = false;
+        if (node.children[i]->HasStyle("display") && std::get<string>(child.style["display"]) == "inline") blockDisplay = false;
 
         if (node.type == "br")
         {
@@ -130,7 +133,7 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
             if(currentLineHeight > 0) MoveCursorToNextLine(currentLineHeight, cursorY);
 
             //Determines the childs size, as well as sets all of the sizes and positions of its children.
-            LayoutChildren(child, parentWidth, website);
+            FullLayoutPass(child, parentWidth, website);
 
             float blockWidth = child.layout.contentSize.x + child.layout.topLeftMargin.x + child.layout.bottomRightMargin.x;
             farthestRight = std::max(blockWidth, farthestRight);
@@ -143,6 +146,7 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
         }
         else
         {
+            // Non block display
             if (child.type == "#text")
             {
                 cursorX += child.layout.topLeftMargin.x + child.layout.border.x;
@@ -158,14 +162,13 @@ void Layout::LayoutChildren(Node& node, float parentWidth, Website& website)
                 
                 ImFont* font = GetNodeFont(child);
                 WrapNode(child, parentWidth, cursorX, cursorY);
-                //CalculateSelfSize(child, parentWidth, website);
 
                 cursorX += child.layout.bottomRightMargin.x + child.layout.border.x;
                 currentLineHeight = std::max(currentLineHeight, child.layout.contentSize.y);
             }
             else
             {
-                LayoutChildren(child, parentWidth, website);
+                FullLayoutPass(child, parentWidth, website);
                 child.layout.localPos = ImVec2(cursorX + child.layout.topLeftMargin.x + child.layout.border.x + child.layout.padding.x, cursorY);
                 cursorX += child.layout.contentSize.x + child.layout.topLeftMargin.x + child.layout.bottomRightMargin.x;
                 currentLineHeight = std::max(currentLineHeight, child.layout.contentSize.y);

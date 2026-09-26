@@ -43,7 +43,7 @@ namespace WWPUnitTests
             Tab* fakeTab = nullptr;
             Website* website = new Website("test", fakeTab);
             website->rootNode = std::make_shared<Node>(nullptr, "div", 0);
-            website->loaded = true;
+            website->fullyLoaded = true;
             return website;
         }
 
@@ -59,12 +59,12 @@ namespace WWPUnitTests
             root->children.emplace_back(root, "div", 1);
             root->children.emplace_back(root, "div", 2);
 
-            website->layout.LayoutChildren(*root, 500.0f, *website);
+            website->layout.FullLayoutPass(*root, 500.0f, *website);
 
-            Assert::AreEqual(0.0f, root->children[0].layout.localPos.y);
+            Assert::AreEqual(0.0f, root->children[0]->layout.localPos.y);
             Assert::IsTrue(
-                root->children[1].layout.localPos.y >=
-                root->children[0].layout.contentSize.y
+                root->children[1]->layout.localPos.y >=
+                root->children[0]->layout.contentSize.y
             );
         }
 
@@ -80,17 +80,17 @@ namespace WWPUnitTests
             root->children.emplace_back(root, "#text", 1);
             root->children.emplace_back(root, "#text", 2);
 
-            root->children[0].attributes["text"] = "Hello";
-            root->children[1].attributes["text"] = "World";
+            root->children[0]->attributes["text"] = "Hello";
+            root->children[1]->attributes["text"] = "World";
 
-            root->children[0].style["display"] = std::string("inline");
-            root->children[1].style["display"] = std::string("inline");
+            root->children[0]->style["display"] = std::string("inline");
+            root->children[1]->style["display"] = std::string("inline");
 
-            website->layout.LayoutChildren(*root, 500.0f, *website);
+            website->layout.FullLayoutPass(*root, 500.0f, *website);
 
             Assert::AreEqual(
-                root->children[0].layout.localPos.y,
-                root->children[1].layout.localPos.y
+                root->children[0]->layout.localPos.y,
+                root->children[1]->layout.localPos.y
             );
         }
 
@@ -104,13 +104,13 @@ namespace WWPUnitTests
             Node* root = website->rootNode.load().get();
 
             root->children.emplace_back(root, "div", 1);
-            root->children[0].style["margin"] = 10.0f;
+            root->children[0]->style["margin"] = 10.0f;
 
-            website->layout.LayoutChildren(*root, 500.0f, *website);
+            website->layout.FullLayoutPass(*root, 500.0f, *website);
 
-            Assert::AreEqual(10.0f, root->children[0].layout.topLeftMargin.x);
-            Assert::AreEqual(10.0f, root->children[0].layout.bottomRightMargin.x);
-            Assert::AreEqual(10.0f, root->children[0].layout.topLeftMargin.y);
+            Assert::AreEqual(10.0f, root->children[0]->layout.topLeftMargin.x);
+            Assert::AreEqual(10.0f, root->children[0]->layout.bottomRightMargin.x);
+            Assert::AreEqual(10.0f, root->children[0]->layout.topLeftMargin.y);
         }
 
         // ------------------------------------------------------------
@@ -124,11 +124,11 @@ namespace WWPUnitTests
 
             root->children.emplace_back(root, "div", 1);
 
-            website->layout.LayoutChildren(*root, 800.0f, *website);
+            website->layout.FullLayoutPass(*root, 800.0f, *website);
 
             Assert::AreEqual(
                 800.0f,
-                root->children[0].layout.contentSize.x
+                root->children[0]->layout.contentSize.x
             );
         }
 
@@ -142,7 +142,7 @@ namespace WWPUnitTests
             Node* root = website->rootNode.load().get();
 
             root->children.emplace_back(root, "img", 1);
-            Node& imgNode = root->children[0];
+            Node& imgNode = *root->children[0];
 
             imgNode.attributes["src"] = "logo";
 
@@ -152,7 +152,7 @@ namespace WWPUnitTests
 
             website->images["logo"] = img;
 
-            website->layout.LayoutChildren(*root, 500.0f, *website);
+            website->layout.FullLayoutPass(*root, 500.0f, *website);
 
             Assert::AreEqual(200.0f, imgNode.layout.contentSize.x);
             Assert::AreEqual(100.0f, imgNode.layout.contentSize.y);

@@ -29,7 +29,7 @@ Tab::Tab(std::string url)
     char name[256];
     std::snprintf(name, sizeof(name), "%s###%d", currentPage->name.c_str(), id);
 
-    BrowserConsole::Log("Tab", "Creating tab with Name: " + std::string(name) + " ID: " + std::to_string(id));
+    BrowserConsole::GetInstance().Log("Tab", "Creating tab with Name: " + std::string(name) + " ID: " + std::to_string(id));
     viewingSource = false;
     viewingDOM = false;
     viewingCSS = false;
@@ -80,12 +80,12 @@ void Tab::SetupDocking()
 
     ImGuiID tabDock;
     ImGuiID rightPannelDock;
-    ImGui::DockBuilderSplitNode(dockID, ImGuiDir_Right, 0.3f, &rightPannelDock, &tabDock);
-    char cssID[256], domID[256], sourceID[256];
+    ImGuiID bottomRightPannelDock;
+    ImGuiID rightSplitNode = ImGui::DockBuilderSplitNode(dockID, ImGuiDir_Right, 0.3f, &rightPannelDock, &tabDock);
+    char cssID[256], domID[256], inspectID[256], sourceID[256];
     std::snprintf(cssID, sizeof(cssID), "%s CSS###CSS %d", currentPage->name.c_str(), id);
     std::snprintf(domID, sizeof(domID), "%s DOM###DOM %d", currentPage->name.c_str(), id);
     std::snprintf(sourceID, sizeof(sourceID), "%s Source###Source %d", currentPage->name.c_str(), id);
-    std::snprintf(sourceID, sizeof(sourceID), "%s Source###Hover %d", currentPage->name.c_str(), id);
 
     ImGui::Begin(cssID); ImGui::End();
     ImGui::Begin(domID); ImGui::End();
@@ -97,6 +97,11 @@ void Tab::SetupDocking()
     ImGui::DockBuilderDockWindow(sourceID, rightPannelDock);
     ImGui::DockBuilderDockWindow(tabWindowName, tabDock);
     if(floating) ImGui::DockBuilderFinish(dockID);
+
+
+    ImGui::DockBuilderSplitNode(rightSplitNode, ImGuiDir_Down, 0.3f, &bottomRightPannelDock, &rightPannelDock);
+    std::snprintf(inspectID, sizeof(inspectID), "%s Inspect###Inspect %d", currentPage->name.c_str(), id);
+    ImGui::DockBuilderDockWindow(inspectID, bottomRightPannelDock);
 }
 void Tab::OnResize()
 {
@@ -125,12 +130,12 @@ void Tab::Render()
 	}
     contentSize = ImGui::GetContentRegionAvail();
 
-    if (currentPage->loaded && justResized)
+    if (currentPage->fullyLoaded && justResized)
     {
         std::shared_ptr<Node> domSnapshot = currentPage->rootNode.load();
-        currentPage->layout.LayoutChildren(*domSnapshot, contentSize.x, *currentPage);
+        currentPage->layout.FullLayoutPass(*domSnapshot, contentSize.x, *currentPage);
 
-        currentPage->interpretedDOM = PrintNode(domSnapshot.get(), 0);
+        currentPage->interpretedDOM = PrintNode(domSnapshot.get(), 0, 999, PrintNodeInfo::Everything);
         currentPage->rootNode.store(domSnapshot);
         justResized = false;
     }
@@ -138,7 +143,7 @@ void Tab::Render()
     //URL Bar
     RenderURLBar();
 
-    if (attemptingToLoadNewPage && currentPage->loaded)
+    if (attemptingToLoadNewPage && currentPage->fullyLoaded)
     {
         if(!attemptingToLoadFromHistory) urlHistory.push_back(currentURL);
         currentURL = urlBuffer;
@@ -147,7 +152,7 @@ void Tab::Render()
         attemptingToLoadFromHistory = false;
     }
 
-    if (currentPage->loaded && !currentPage->wasLoaded) OnPageLoaded();
+    if (currentPage->fullyLoaded && !currentPage->wasLoaded) OnPageLoaded();
 
     //Display Page
     try
@@ -173,7 +178,7 @@ void Tab::Render()
     if (debuggingHover) DisplayHoverDebug();
 
     if (viewingSource) DisplayDebugMenu("Source", currentPage->websiteSource);
-    if (viewingDOM) DisplayDebugMenu("DOM", currentPage->interpretedDOM);
+    if (viewingDOM && currentPage != nullptr && currentPage->fullyLoaded) currentPage->debugDOMViewer.Render(this);
     if (viewingCSS) DisplayDebugMenu("CSS", currentPage->interpretedCSS);
     renderingTab = nullptr;
     UpdateDocking();
@@ -252,6 +257,7 @@ void Tab::DisplayPage()
 {
     std::multimap<int, std::function<void(ImDrawList*)>> draw_queue;
     std::shared_ptr<Node> domSnapshot = currentPage->rootNode.load();
+    
 
     contentPos = ImGui::GetCursorPos() + ImVec2(0, 20);
     contentScreenPos = ImGui::GetCursorScreenPos() + ImVec2(0, 20);

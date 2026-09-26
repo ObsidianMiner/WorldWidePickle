@@ -10,13 +10,15 @@
 #ifdef _WIN32
 #include <Windows.h>
 #include <mutex>
+
+
 void SetColorHelper(int textColor, int bgColor)
 {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole,
         (bgColor << 4) | textColor);
 }
-inline std::string SetColor(std::string source)
+inline std::string SetColor(std::string_view source)
 {
     if (source == "Browser") SetColorHelper(11, 0);
     else if (source == "Layout") SetColorHelper(6, 0);
@@ -33,7 +35,7 @@ inline void ResetColor()
 }
 #else
 
-inline std::string GetColor(std::string source)
+inline std::string GetColor(std::string_view source)
 {
     if (source == "Browser") color = R"(\033["36m)";
     if (source == "Layout") color = R"(\033["33m)";
@@ -50,22 +52,22 @@ inline void ResetColor()
 }
 #endif
 
-static std::mutex consoleMutex;
-
-inline void BaseLog(const std::string& source, const std::string& log, const std::string color)
+void BrowserConsole::BaseLog(const std::string_view source, const std::string_view log, const std::string_view color, bool verboseOnly)
 {
-    std::string formatted = "[" + source + "] " + log;
+    if (!m_verboseMode && verboseOnly) return;
 
-    std::lock_guard<std::mutex> lock(consoleMutex);
+    std::string formatted = "[" + std::string(source) + "] " + std::string(log);
+
+    std::lock_guard<std::mutex> lock(m_logMutex);
     std::string colorPrefix = SetColor(color);
     std::cout << colorPrefix << formatted << std::endl;
     ResetColor();
 }
-void BrowserConsole::Error(const std::string& source, const std::string& error)
+void BrowserConsole::Error(const std::string_view source, const std::string_view error, bool verboseOnly)
 {
-    BaseLog(source, error, error);
+    BaseLog(source, error, error, verboseOnly);
 }
-void BrowserConsole::Log(const std::string& source, const std::string& log)
+void BrowserConsole::Log(const std::string_view source, const std::string_view log, bool verboseOnly)
 {
-    BaseLog(source, log, source);
+    BaseLog(source, log, source, verboseOnly);
 }

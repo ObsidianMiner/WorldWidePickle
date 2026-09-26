@@ -21,7 +21,7 @@ void Browser::SetupUI()
 {
     PGUI::PGUI();
     SetPurpleStyle();
-    BrowserConsole::Log("Browser", "Setup UI");
+    BrowserConsole::GetInstance().Log("Browser", "Setup UI");
 }
 void Browser::LoadGlobalStyles()
 {
@@ -29,11 +29,11 @@ void Browser::LoadGlobalStyles()
     std::string globalCSS = GetTextFromFileOrURL(globalPath, false);
     CSSBuilder globalStylesBuilder(globalCSS);
     globalStyles = globalStylesBuilder.ParseCSS();
-    BrowserConsole::Log("Browser", "Loaded Global Styles");
+    BrowserConsole::GetInstance().Log("Browser", "Loaded Global Styles");
 }
 void Browser::LoadHomePage()
 {
-    tabs.emplace_back("C:\\Users\\JGEle\\source\\repos\\WorldWidePickle\\Working\\Test Suite\\05-tables.html");
+    tabs.emplace_back("https://html.duckduckgo.com/lite");
 }
 void Browser::RenderTabs()
 {

@@ -68,7 +68,7 @@ unordered_map<string, unordered_map<string, RuleValue>> CSSBuilder::ParseCSS()
     unordered_map<string, unordered_map<string, RuleValue>> styles;
     if (css.find("Page not found") != string::npos)
     {
-        BrowserConsole::Log("CSS", "Could not find CSS");
+        BrowserConsole::GetInstance().Log("CSS", "Could not find CSS");
         return styles;
     }
     /*css.erase(
@@ -193,7 +193,7 @@ unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector(string css)
         {
             int colonLoc = css.find(':', componentStart);
             
-            if (colonLoc == string::npos || colonLoc > pointer) BrowserConsole::Log("CSS", "No colon found for property");
+            if (colonLoc == string::npos || colonLoc > pointer) BrowserConsole::GetInstance().Log("CSS", "No colon found for property");
             else
             {
                 string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));
@@ -209,6 +209,11 @@ unordered_map<string, RuleValue> CSSBuilder::ParseSingleSelector(string css)
 }
 void CSSBuilder::ParseValue(RuleValue& component, string value)
 {
+    if (value.size() == 0)
+    {
+        component = value;
+        return;
+    }
     int valueInt = 0;
     float valueFloat = 0.0f;
     ImU32 valueCol = 0;
@@ -234,11 +239,11 @@ void CSSBuilder::ParseValue(RuleValue& component, string value)
 }
 void CSSBuilder::ParseComponent()
 {
-    if (!inSel) BrowserConsole::Log("CSS", "; found outside requirement");
+    if (!inSel) BrowserConsole::GetInstance().Log("CSS", "; found outside requirement");
     else
     {
         int colonLoc = css.find(':', componentStart);
-        if (colonLoc == string::npos || colonLoc > pointer) BrowserConsole::Log("CSS", "No colon found for property (pt2)");
+        if (colonLoc == string::npos || colonLoc > pointer) BrowserConsole::GetInstance().Log("CSS", "No colon found for property (pt2)");
         else
         {
             string property = TrimStr(css.substr(componentStart, colonLoc - componentStart));

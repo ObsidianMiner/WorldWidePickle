@@ -1,6 +1,6 @@
 /**
 * @file Layout.cpp
-* @brief Everything nessasary for LayoutChildren
+* @brief Everything nessasary for FullLayoutPass
 */
 
 #include "Browser/Tab.h"
@@ -11,6 +11,7 @@
 #include "Node.h"
 #include "Layout.h"
 #include <iostream>
+#include <sstream>
 #include "Util/Fonts.h"
 #include "CSS/CSSBuilder.h"
 
@@ -52,6 +53,8 @@ ImVec2 Layout::GetGlobalPos(const Node& node)
     if (node.parent != nullptr) return node.layout.localPos + GetGlobalPos(*node.parent);
     return node.layout.localPos;
 }
+
+
 /// <summary>
 /// Sets the proper contentSize and new cursorPos from wrapping the text. Make sure to set node.lineStart first.
 /// Will error if the node does not contain "text" attribute.
@@ -66,22 +69,22 @@ void Layout::WrapNode(Node& node, float parentWidth, float& cursorX, float& curs
     const char* textStart = text;
     const char* textEnd = text + node.attributes.at("text").size();
     float fontSize = GetFontSize(node, defaultFontSize);
-    float lineHeight = fontSize;
     float startX = cursorX;
     float startY = cursorY;
 
     if (text == textEnd)
     {
-        std::cout << "[ERROR] INVALID TEXT IN WRAP NODE";
+        std::cerr << "[ERROR] INVALID TEXT IN WRAP NODE";
         return;
     }
 
     ImFont* font = GetNodeFont(node);
     if (font == nullptr)
     {
-        std::cout << "[ERROR] INVALID FONT IN WRAP NODE";
+        std::cerr << "[ERROR] INVALID FONT IN WRAP NODE";
         return;
     }
+    float lineHeight = font->CalcTextSizeA(fontSize, FLT_MAX, FLT_MAX, text).y;
 
     while (text < textEnd)
     {
@@ -110,7 +113,7 @@ void Layout::WrapNode(Node& node, float parentWidth, float& cursorX, float& curs
     }
     else
     {
-        node.layout.contentSize.x = (ImGui::CalcTextSize(node.attributes.at("text").c_str(), nullptr, false, parentWidth) * (fontSize / 20)).x;
+        node.layout.contentSize.x = font->CalcTextSizeA(fontSize, FLT_MAX, parentWidth, text).x;
         node.layout.contentSize.y = lineHeight;
     }
 }
@@ -129,8 +132,8 @@ void Layout::CalculateChildrenAutoMargins(Node& node, float parentWidth, Website
 
     for (size_t i = 0; i < node.children.size(); i++)
     {
-        Node& child = node.children[i];
-        LayoutChildren(node, parentWidth, website);
+        Node& child = *node.children[i];
+        FullLayoutPass(node, parentWidth, website);
 
         bool blockDisplay = true;
         if (child.HasStyle("display") && std::get<string>(child.style["display"]) == "inline") blockDisplay = false;
@@ -141,7 +144,7 @@ void Layout::CalculateChildrenAutoMargins(Node& node, float parentWidth, Website
             wasBlock = true;
             if (shouldAutoMargin)
             {
-                autoMarginedChildren.emplace_back(&node.children[i]);
+                autoMarginedChildren.emplace_back(node.children[i].get());
             }
             if (maxLineHeight > 0)
             {
@@ -161,7 +164,7 @@ void Layout::CalculateChildrenAutoMargins(Node& node, float parentWidth, Website
             }
             if (shouldAutoMargin)
             {
-                autoMarginedChildren.emplace_back(&node.children[i]);
+                autoMarginedChildren.emplace_back(node.children[i].get());
             }
         }
     }
@@ -188,6 +191,40 @@ void Layout::CalculateSelfSize(Node& node, float parentWidth, Website& website)
             PImage* image = &it->second;
             node.layout.contentSize.x = (float)image->width;
             node.layout.contentSize.y += (float)image->height;
+        }
+    }
+    if (node.type == "input")
+    {
+        if (node.HasAttribute("type") && (node.attributes["type"] == "button" || node.attributes["type"] == "submit"))
+        {
+            std::string btn_label = "Button";
+            if (node.HasAttribute("value")) btn_label = node.attributes["value"];
+
+            float fontSize = GetFontSize(node, GetFontSize(node, defaultFontSize));
+            const char* text = btn_label.c_str();
+            const char* textEnd = text + btn_label.size();
+
+            if (text == textEnd)
+            {
+                std::cerr << "[ERROR] INVALID TEXT IN WRAP NODE";
+                return;
+            }
+
+            ImFont* font = GetNodeFont(node);
+            if (font == nullptr)
+            {
+                std::cerr << "[ERROR] INVALID FONT IN WRAP NODE";
+                return;
+            }
+
+            ImVec2 textSize = font->CalcTextSizeA(fontSize, FLT_MAX, FLT_MAX, btn_label.c_str());
+            node.layout.contentSize.x = textSize.x + 10.0f;
+            node.layout.contentSize.y = textSize.y + 10.0f;
+        }
+        else
+        {
+            node.layout.contentSize.y = 20.0f;
+            node.layout.contentSize.x = 200.0f;
         }
     }
     if (node.type == "#text" && node.HasAttribute("text"))

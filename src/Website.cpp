@@ -11,12 +11,36 @@
 #include "CSS/CSSBuilder.h"
 #include <tidy/tidybuffio.h>
 #include "Browser/Tab.h"
-#include "HTML/HTMLBuilder.h"
+#include "HTML/DOMBuilder.h"
 
+
+std::unique_ptr<Node> Website::CloneTree(const Node& node, Node* newParent)
+{
+    auto copy = node.CrClone();
+    copy->parent = newParent;
+    copy->children.clear();
+    for (size_t i = 0; i < node.children.size(); i++)
+    {
+        copy->children.push_back(CloneTree(*node.children[i], copy.get()));
+    }
+    return copy;
+}
+
+Node* Website::GetNodeFromIdInChildren(Node* node, int id)
+{
+    if (node->id == id) return node;
+    for (size_t i = 0; i < node->children.size(); i++)
+    {
+        Node* possibleNodeInChild = GetNodeFromIdInChildren(node->children[i].get(), id);
+        if (possibleNodeInChild != nullptr) return possibleNodeInChild;
+    }
+
+    return nullptr;
+}
 
 Website::Website(std::string url, Tab* tab)
 {
-    loaded = false;
+    fullyLoaded = false;
     wasLoaded = false;
 	this->url = url;
     this->tab = tab;
@@ -24,10 +48,11 @@ Website::Website(std::string url, Tab* tab)
     content = "<h1>Loading...</h1>";
 	websiteSource = "<h1>Loading...</h1>";
     styles = globalStyles;
-    highestID = 0;
-    rootNode = std::make_shared<Node>(nullptr, "rootHTML", highestID++);
+    nextNodeID = 0;
+    rootNode = std::make_shared<Node>(nullptr, "rootHTML", nextNodeID++);
 	std::thread(&Website::FetchContent, this).detach();
     layout = Layout();
+    debugDOMViewer = DebugDOMViewer();
 }
 
 Website::~Website()
@@ -45,7 +70,21 @@ void FixParentPointers(Node& node, Node* parent)
     node.parent = parent;
     for (size_t i = 0; i < node.children.size(); i++)
     {
-        FixParentPointers(node.children[i], &node);
+        FixParentPointers(*node.children[i], &node);
+    }
+}
+void Website::InitalizeMutableData(Node& node, bool recursive)
+{
+    if (node.type == "input" && node.attributes["type"] == "text")
+    {
+        mutableState.try_emplace(node.id, std::make_unique<TextInputMutableState>(TextInputMutableState()));
+    }
+    if (recursive)
+    {
+        for (size_t i = 0; i < node.children.size(); i++)
+        {
+            InitalizeMutableData(*node.children[i], true);
+        }
     }
 }
 /// <summary>
@@ -54,38 +93,36 @@ void FixParentPointers(Node& node, Node* parent)
 void Website::FetchContent()
 {
     //Source
-    BrowserConsole::Log("Fetch", "Fetching URL: " + url);
+    BrowserConsole::GetInstance().Log("Fetch", "Fetching URL: " + url, true);
     content = GetTextFromFileOrURL(url, true);
 	CreateRawTextVersion();
-    BrowserConsole::Log("Fetch", "Fetched HTML from: " + url);
+    BrowserConsole::GetInstance().Log("Fetch", "Fetched HTML from: " + url, true);
     //Nodes
-    auto parsedTreeRoot = std::make_shared<Node>(ParseNodes(content));
-	FixParentPointers(*parsedTreeRoot, nullptr);
-    
-	rootNode.store(parsedTreeRoot);
+    std::shared_ptr<Node> parsedTreeRoot = ParseNodes(content);
+    InitalizeMutableData(*parsedTreeRoot, true);
+    layout.FullLayoutPass(*parsedTreeRoot, tab->contentSize.x, *this);
+    rootNode.store(CloneTree(*parsedTreeRoot, nullptr));
     
     //References (img/css/js/ect.)
     (*parsedTreeRoot).LoadReferences(*this);
     //Style Page
-    StyleAndLayoutNodes();
+    StyleAndLayoutNodes(parsedTreeRoot);
+    layout.FullLayoutPass(*parsedTreeRoot, tab->contentSize.x, *this);
+    rootNode.store(CloneTree(*parsedTreeRoot, nullptr));
     interpretedDOM = PrintNode((parsedTreeRoot.get()), 0);
     interpretedCSS = CSSBuilder::CSSString(styles);
-    BrowserConsole::Log("Fetch", "Finished fetching URL:" + url);
-    loaded = true;
+    BrowserConsole::GetInstance().Log("Fetch", "Finished fetching URL:" + url, true);
+    fullyLoaded = true;
 }
 /// <summary>
-/// Creates a duplicate DOM makes style changes, and then sets the DOM to the new DOM
+/// Applys style changes, intended to be used on a seperate building tree, not the rendering tree.
 /// </summary>
-void Website::StyleAndLayoutNodes()
+void Website::StyleAndLayoutNodes(std::shared_ptr<Node> tree)
 {
-    auto styledNodes = ReadTree();
     std::unordered_map<std::string, RuleValue> emptyStyle;
 
-    (*styledNodes).UpdateStyle(*this, emptyStyle);
-    FixParentPointers(*styledNodes, nullptr);
-    layout.LayoutChildren(*styledNodes, tab->contentSize.x, *this);
-    interpretedDOM = PrintNode((styledNodes.get()), 0);
-    rootNode.store(styledNodes);
+    (*tree).UpdateStyle(*this, emptyStyle);
+    layout.FullLayoutPass(*tree, tab->contentSize.x, *this);
 }
 
 std::string StripHiddenTags(const std::string& html)

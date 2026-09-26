@@ -7,6 +7,7 @@
 #include <map>
 #include <variant>
 #include <imgui/imgui.h>
+#include <memory>
 
 struct ImDrawList;
 class Website;
@@ -18,6 +19,9 @@ class NodeLayout
 public:
 	ImVec2 localPos{ 0.0f, 0.0f };
 	ImVec2 contentSize{ 0.0f, 0.0f };
+	ImVec2 minContentSize{ 0.0f, 0.0f };
+	ImVec2 maxContentSize{ 0.0f, 0.0f };
+	ImVec2 perferedSize{ 0.0f,0.0f };
 	ImVec2 topLeftMargin{ 0.0f, 0.0f };
 	ImVec2 bottomRightMargin{ 0.0f, 0.0f };
 	ImVec2 border{ 0.0f, 0.0f };
@@ -26,13 +30,28 @@ public:
 
 	NodeLayout() = default;
 };
+struct NodeMutableState
+{
 
+};
+struct TextInputMutableState : NodeMutableState
+{
+	std::string inputText;
+};
+struct CheckboxInputMutableState : NodeMutableState
+{
+	bool value;
+};
+struct SelectMutableState : NodeMutableState
+{
+	int selectedNodeId;
+};
 struct Node
 {
 public:
 	//Core Node
-	int id = -1;
 	std::string type;
+	int id = -1;
 	std::unordered_map<std::string, std::string> attributes;
 	std::unordered_map<std::string, RuleValue> style;
 
@@ -43,15 +62,18 @@ public:
 
 	//Hierarchy
 	Node* parent = nullptr;
-	std::vector<Node> children;
+	std::vector<std::unique_ptr<Node>> children;
 	std::vector<Node*> GetParents();
+	Node* GetParentNodeOfType(std::string type);
 	Node* TryGetChildOfType(std::string type);
 	int GetIndexInParent() const;
 
 	NodeLayout layout;
 
-	Node(Node* parent, std::string type, int id) { this->parent = parent; this->type = type; this->id = id; };
+	Node(Node* parent, std::string type, int id);
 	Node() = default;
+
+	std::unique_ptr<Node> CrClone() const;
 
 	//Reference Loading
 	void LoadReferences(Website& website);
@@ -62,7 +84,27 @@ public:
 		return this == &other;
 	}
 };
+enum class PrintNodeInfo : uint8_t
+{
+	None = 0,
+	ContentSize = 1,
+	MinMaxContentSize = 2,
+	LocalPos = 4,
+	GlobalPos = 8,
+	Margins = 16,
+	Everything = 255
+};
+inline PrintNodeInfo operator|(PrintNodeInfo lhs, PrintNodeInfo rhs)
+{
+	using T = std::underlying_type_t<PrintNodeInfo>;
+	return static_cast<PrintNodeInfo>(static_cast<T>(lhs) | static_cast<T>(rhs));
+}
+inline PrintNodeInfo operator&(PrintNodeInfo lhs, PrintNodeInfo rhs)
+{
+	using T = std::underlying_type_t<PrintNodeInfo>;
+	return static_cast<PrintNodeInfo>(static_cast<T>(lhs) & static_cast<T>(rhs));
+}
 
-std::string PrintNode(Node* node, int indent);
+std::string PrintNode(Node* node, int indent, int maxDetph = 999, PrintNodeInfo infoFlags = PrintNodeInfo::None);
 
 std::string PrintNodeAttributes(Node* node);

@@ -3,7 +3,7 @@
 * @brief Basic node functions
 */
 
-#include "HTML/HTMLBuilder.h"
+#include "HTML/DOMBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>
@@ -54,19 +54,47 @@ std::vector<Node*> Node::GetParents()
     }
     return parents;
 }
+Node* Node::GetParentNodeOfType(std::string type)
+{
+    Node* currentParent = parent;
+    while (currentParent != nullptr)
+    {
+        if (currentParent->type == type) return currentParent;
+        currentParent = currentParent->parent;
+    }
+    return nullptr;
+}
 int Node::GetIndexInParent() const
 {
     auto it = std::find_if(parent->children.begin(), parent->children.end(),
-        [&](const Node& elem) {
-            return elem.id == id;
+        [&](const std::unique_ptr<Node>& elem) {
+            return elem->id == id;
         });
 
-    if (it != parent->children.end()) {
+    if (it != (*parent).children.end()) {
         return std::ranges::distance(parent->children.begin(), it);
     }
-    BrowserConsole::Error("Layout", "Could not find index in parent, parent is likely invalid");
+    BrowserConsole::GetInstance().Error("Layout", "Could not find index in parent, parent is likely invalid");
     return -1;
 }
+Node::Node(Node* parent, std::string type, int id)
+{
+    this->parent = parent;
+    this->type = type;
+    this->id = id;
+}
+
+std::unique_ptr<Node> Node::CrClone() const
+{
+    unique_ptr<Node> copy = std::make_unique<Node>(nullptr, type, id);
+    copy->attributes = attributes;
+    copy->style = style;
+    copy->layout = layout;
+    return copy;
+}
+
+
+
 string AttributesToString(const unordered_map<string, string> attributes)
 {
     //if (attributes.size() == 0) return "No Attributes";
@@ -79,24 +107,38 @@ string AttributesToString(const unordered_map<string, string> attributes)
     }
     return result;
 }
-string PrintNode(Node* node, int indent)
+string PrintNode(Node* node, int indent, int maxDetph, PrintNodeInfo infoFlags)
 {
     string output = std::string(indent, '\t') + node->type + ' ' + AttributesToString(node->attributes);
-#ifdef DebugPos
-    string globalPos = " | GPos: " + to_string(int(Layout::GetGlobalPos(*node).x)) + ' ' + to_string(int(Layout::GetGlobalPos(*node).y));
-    string localPos = "         | LPos: " + to_string(int(node->layout.localPos.x)) + ' ' + to_string(int(node->layout.localPos.y));
-    output += localPos + globalPos;
-#endif
-#ifdef DebugMargins
-    string margins = " | Margins L: " + to_string(int(node->layout.topLeftMargin.x)) + " R: " + to_string(int(node->layout.bottomRightMargin.x))
-        + " T: " + to_string(int(node->layout.topLeftMargin.y)) + " B: " + to_string(int(node->layout.bottomRightMargin.y));
-    output += margins;
-#endif
-    string contentSize = " | CS: " + to_string(int(node->layout.contentSize.x)) + ' ' + to_string(int(node->layout.contentSize.y));
-    output += contentSize + "\n";
-    for (size_t i = 0; i < node->children.size(); i++)
+    if ((infoFlags & PrintNodeInfo::GlobalPos) != PrintNodeInfo::None)
     {
-        output += PrintNode(&node->children[i], indent + 1);
+        output += " | GPos: " + to_string(int(Layout::GetGlobalPos(*node).x)) + ' ' + to_string(int(Layout::GetGlobalPos(*node).y));
+    }
+    if ((infoFlags & PrintNodeInfo::LocalPos) != PrintNodeInfo::None)
+    {
+        output += " | LPos: " + to_string(int(node->layout.localPos.x)) + ' ' + to_string(int(node->layout.localPos.y));
+    }
+    if ((infoFlags & PrintNodeInfo::Margins) != PrintNodeInfo::None)
+    {
+        output += " | Margins L: " + to_string(int(node->layout.topLeftMargin.x)) + " R: " + to_string(int(node->layout.bottomRightMargin.x))
+            + " T: " + to_string(int(node->layout.topLeftMargin.y)) + " B: " + to_string(int(node->layout.bottomRightMargin.y));
+    }
+    if ((infoFlags & PrintNodeInfo::ContentSize) != PrintNodeInfo::None)
+    {
+        output += " | ContentSize: " + to_string(int(node->layout.contentSize.x)) + ' ' + to_string(int(node->layout.contentSize.y));
+    }
+    if ((infoFlags & PrintNodeInfo::MinMaxContentSize) != PrintNodeInfo::None)
+    {
+        output += " | MinSize: " + to_string(int(node->layout.minContentSize.x)) + ' ' + to_string(int(node->layout.minContentSize.y));
+        output += " | MaxSize: " + to_string(int(node->layout.maxContentSize.x)) + ' ' + to_string(int(node->layout.maxContentSize.y));
+        output += " | PerferedSize: " + to_string(int(node->layout.perferedSize.x)) + ' ' + to_string(int(node->layout.perferedSize.y));
+    }
+    if (maxDetph > 1)
+    {
+        for (size_t i = 0; i < node->children.size(); i++)
+        {
+            output += '\n' + PrintNode(node->children[i].get(), indent + 1, maxDetph - 1, infoFlags);
+        }
     }
     return output;
 }
@@ -107,7 +149,7 @@ std::string PrintNodeAttributes(Node* node)
     result.reserve(node->attributes.size() * 5);
     for (const auto& attribute : node->attributes)
     {
-        result += attribute.first + "=\"" + attribute.second + "\"";
+        result += " " + attribute.first + "=\"" + attribute.second + "\"";
     }
     return result;
 }
@@ -115,7 +157,7 @@ Node* Node::TryGetChildOfType(std::string type)
 {
     for (size_t i = 0; i < children.size(); i++)
     {
-        if (children[i].type == type) return &children[i];
+        if (children[i]->type == type) return children[i].get();
     }
     return nullptr;
 }

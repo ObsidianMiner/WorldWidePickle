@@ -33,7 +33,7 @@ void Node::LoadReferences(Website& website)
     }
     else if (type == "title")
     {
-        if(children.size() == 1 && children[0].HasAttribute("text")) website.name = children[0].attributes.at("text");
+        if(children.size() == 1 && children[0]->HasAttribute("text")) website.name = children[0]->attributes.at("text");
     }
     else if (type == "link")
     {
@@ -54,7 +54,7 @@ void Node::LoadReferences(Website& website)
                         website.styles.insert_or_assign(selector, declarations);
                     }
                 }
-                BrowserConsole::Log("Fetch", "Loaded CSS from " + realURL);
+                BrowserConsole::GetInstance().Log("Fetch", "Loaded CSS from " + realURL);
             }
         }
     }
@@ -71,11 +71,11 @@ void Node::LoadReferences(Website& website)
                 website.styles.insert_or_assign(selector, declarations);
             }
         }
-        BrowserConsole::Log("Fetch", "Loaded CSS from style element");
+        BrowserConsole::GetInstance().Log("Fetch", "Loaded CSS from style element");
     }
     for (size_t i = 0; i < children.size(); i++)
     {
-        children[i].LoadReferences(website);
+        children[i]->LoadReferences(website);
     }
 }
 

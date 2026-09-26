@@ -1,9 +1,9 @@
 /**
-* @file HTMLTreeBuilder.cpp
+* @file DOMBuilder.cpp
 * @brief Builds a DOM from an HTML file
 */
 
-#include "HTMLBuilder.h"
+#include "DOMBuilder.h"
 #include <regex>
 #include <iostream>
 #include <tuple>
@@ -64,7 +64,7 @@ std::string TextTrim(const std::string& str, bool& spacesBefore, bool& spacesAft
 
     return std::string(begin, end);
 }
-inline void CreateInnerText(Node* parent, std::string textInbetweenTags, int& highestID)
+inline void CreateInnerText(Node* parent, std::string textInbetweenTags, int& nextNodeID)
 {
     
     bool spacesBefore = false;
@@ -72,11 +72,11 @@ inline void CreateInnerText(Node* parent, std::string textInbetweenTags, int& hi
     std::string innerText = TextTrim(textInbetweenTags, spacesBefore, spacesAfter);
     if (innerText.length() > 0)
     {
-        auto& node = parent->children.emplace_back(parent, "#text", highestID++);
+        auto& node = *parent->children.emplace_back(std::make_unique<Node>(parent, "#text", nextNodeID++));
         node.attributes.emplace(std::pair<std::string, std::string>{ "text", innerText });
         if (spacesBefore) node.attributes.emplace(std::pair<std::string, std::string>{ "sb", "1"});
         if (spacesAfter) node.attributes.emplace(std::pair<std::string, std::string>{ "sa", "1"});
-        highestID++;
+        nextNodeID++;
     }
 }
 inline void HTMLTreeBuilder::StartTag()
@@ -87,18 +87,18 @@ inline void HTMLTreeBuilder::StartTag()
     buildingPropertyStart = buildingNodeStart;
     if (currentContext == nullptr)
     {
-        rootNodes.emplace_back();
-        buildingNode = &rootNodes[rootNodes.size() - 1];
+        rootNodes.emplace_back(std::make_unique<Node>());
+        buildingNode = rootNodes[rootNodes.size() - 1].get();
     }
     else
     {
         //Handle innerText
-        CreateInnerText(currentContext, htmlContent.substr(lastEndTagPos + 1, pointer - (lastEndTagPos + 1)), highestID);
+        CreateInnerText(currentContext, htmlContent.substr(lastEndTagPos + 1, pointer - (lastEndTagPos + 1)), nextNodeID);
         //Add the node to the current context
-        currentContext->children.emplace_back();
-        buildingNode = &currentContext->children[currentContext->children.size() - 1];
-        buildingNode->id = highestID;
-        highestID++;
+        currentContext->children.emplace_back(std::make_unique<Node>());
+        buildingNode = currentContext->children[currentContext->children.size() - 1].get();
+        buildingNode->id = nextNodeID;
+        nextNodeID++;
 
 
         lastStartTagPos = pointer;
@@ -126,10 +126,11 @@ inline void HTMLTreeBuilder::EndTag()
             if (parents[i]->type == buildingNode->type)
             {
                 //Remove the closing tag from becoming a child
+                Node* target = buildingNode;
                 parents[i]->children.erase(
                     std::remove_if(parents[i]->children.begin(), parents[i]->children.end(),
-                        [this](const Node& obj) {
-                            return &obj == this->buildingNode;
+                        [target](const std::unique_ptr<Node>& obj) {
+                            return obj.get() == target;
                         }),
                     parents[i]->children.end()
                 );
@@ -137,7 +138,7 @@ inline void HTMLTreeBuilder::EndTag()
 
                 if (parents[i]->children.size() == 0)
                 {
-                    CreateInnerText(parents[i], htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1)), highestID);
+                    CreateInnerText(parents[i], htmlContent.substr(lastEndTagPos + 1, lastStartTagPos - (lastEndTagPos + 1)), nextNodeID);
 #ifdef ParseDebug
                     std::cout << parents[i]->innerText << std::endl;
 #endif
@@ -171,10 +172,10 @@ void ValidateNode(Node* node)
 {
     for (size_t i = 0; i < node->children.size(); i++)
     {
-        if (node->children[i].parent != node)
+        if (node->children[i]->parent != node)
         {
-            std::cout << "Invalid parent reference in node: " << node->children[i].type << std::endl;
-            node->children[i].parent = node;
+            std::cout << "Invalid parent reference in node: " << node->children[i]->type << std::endl;
+            node->children[i]->parent = node;
         }
     }
 }
@@ -186,7 +187,7 @@ void HTMLTreeBuilder::EndCDATA()
     currentContext->attributes.emplace("CDATA", CDATAContent);
     lastEndTagPos = pointer;
 }
-Node HTMLTreeBuilder::ParseNodes()
+std::unique_ptr<Node> HTMLTreeBuilder::ParseNodes()
 {
     while (pointer < htmlContent.length())
     {
@@ -208,7 +209,7 @@ Node HTMLTreeBuilder::ParseNodes()
                 }
                 else StartTag();
             }
-            else if (htmlContent[pointer] == ' ' && (!readingAttribute || htmlContent[pointer - 1] == '"') && insideTag)
+            else if (htmlContent[pointer] == ' ' && (!readingAttribute || htmlContent[pointer - 1] == '"' || htmlContent[pointer - 1] == '\'') && insideTag)
             {
                 AddAttributeOrType();
             }
@@ -221,25 +222,25 @@ Node HTMLTreeBuilder::ParseNodes()
         pointer++;
     }
 
-    BrowserConsole::Log("DOM Builder", "Finished parsing nodes, starting validation.");
-    for (Node& root : rootNodes)
+    BrowserConsole::GetInstance().Log("DOM Builder", "Finished parsing nodes, starting validation parent child validation.", true);
+    for (size_t i = 0; i < rootNodes.size(); i++)
     {
-        ValidateNode(&root);
-	}
+        ValidateNode(rootNodes[i].get());
+    }
+    BrowserConsole::GetInstance().Log("DOM Builder", "Validated", true);
 
     if (rootNodes.size() != 1)
     {
-        Node rootNode = Node(nullptr, "html", highestID++);
-        rootNode.children = rootNodes;
+        std::unique_ptr<Node> rootNode = std::make_unique<Node>(nullptr, "html"s, nextNodeID++);
+        rootNode->children = std::move(rootNodes);
         return rootNode;
     }
-    else
-    {
-        return rootNodes[0];
-    }
+
+
+    return std::move(rootNodes[0]);
 }
 
-Node ParseNodes(const string& htmlContent)
+std::unique_ptr<Node> ParseNodes(const string& htmlContent)
 {
     HTMLTreeBuilder builder = HTMLTreeBuilder(htmlContent);
     return builder.ParseNodes();

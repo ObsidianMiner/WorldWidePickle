@@ -6,7 +6,7 @@ Node* GetChildHovered(Node* node, const ImVec2& globalPos)
 {
 	for (size_t i = 0; i < node->children.size(); i++)
 	{
-		if (Layout::IsNodeBoundsInPoint(node->children[i], globalPos)) return GetChildHovered(&node->children[i], globalPos);
+		if (Layout::IsNodeBoundsInPoint(*node->children[i], globalPos)) return GetChildHovered(node->children[i].get(), globalPos);
 	}
 	return node;
 }

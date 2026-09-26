@@ -10,7 +10,8 @@ class Layout
 {
 public:
 	//Layout
-	void LayoutChildren(Node& node, float parentWidth, Website& website);
+	void FullLayoutPass(Node& node, float parentWidth, Website& website);
+	void GetMinMaxSize(Node& node, Website& website);
 	Node* GetHover(const ImVec2& cursorPos, Website& website);
 	static bool IsNodeBoundsInPoint(Node& node, const ImVec2& globalPos);
 	static ImVec2 GetGlobalPos(const Node& node);
@@ -23,4 +24,9 @@ private:
 	void WrapNode(Node& node, float parentWidth, float& currentX, float& currentY);
 	void CalculateChildrenAutoMargins(Node& node, float parentWidth, Website& website);
 	void LayoutTable(Node& node, float parentWidth, Website& website);
+
+	//Size
+	void GetMinMaxSizeSelf(Node& node, Website& website);
+	void GetTableMinMaxSize(Node& node, Website& website);
+	void GetBlockedElementMinMaxSize(Node& node, Website& website);
 };

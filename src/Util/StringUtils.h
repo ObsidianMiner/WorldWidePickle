@@ -9,7 +9,7 @@
 
 
 
-inline bool TryCastToInt(std::string s, int& result) {  
+inline bool TryCastToInt(std::string s, int& result) {
 	if (s[s.size() - 1] == 'x' && s[s.size() - 2] == 'p') s.resize(s.size() - 2); // Remove 'px' suffix if present  
 
 	char* endptr;  

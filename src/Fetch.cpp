@@ -21,7 +21,7 @@ std::string GetTextFromFile(const std::string& url)
     std::ifstream file(url);
     if (!file)
     {
-        BrowserConsole::Log("Fetch", "Could not open the file - " + url);
+        BrowserConsole::GetInstance().Log("Fetch", "Could not open the file - " + url);
         return "Could not open file - " + url;
     }
     return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -64,7 +64,7 @@ bool DownloadImage(const std::string& url, std::vector<unsigned char>& imageBuff
     CURL* curl = curl_easy_init();
     if (!curl)
     {
-        BrowserConsole::Log("Fetch", "CURL NO IMG" + url);
+        BrowserConsole::GetInstance().Log("Fetch", "CURL NO IMG" + url);
         return false;
     }
 
@@ -79,7 +79,7 @@ bool DownloadImage(const std::string& url, std::vector<unsigned char>& imageBuff
     if (res != CURLE_OK)
     {
         std::string error = curl_easy_strerror(res);
-        BrowserConsole::Log("Fetch", "CURL ERROR: " + error);
+        BrowserConsole::GetInstance().Log("Fetch", "CURL ERROR: " + error);
     }
     return res == CURLE_OK;
 }
@@ -113,14 +113,14 @@ ID3D10ShaderResourceView* CreateTextureFromPixels(ID3D10Device* device, unsigned
 }
 
 PImage LoadImgFromWebsiteURL(const std::string& url) {
-    BrowserConsole::Log("Fetch", "Fetching Image: " + url);
+    BrowserConsole::GetInstance().Log("Fetch", "Fetching Image: " + url);
 
     std::vector<unsigned char> imageBuffer;
     PImage image = PImage();
     image.img = nullptr;
 
     if (!DownloadImage(url, imageBuffer)) {
-        BrowserConsole::Log("Fetch", "Failed to download image.");
+        BrowserConsole::GetInstance().Log("Fetch", "Failed to download image.");
         return image;
     }
 
@@ -133,7 +133,7 @@ PImage LoadImgFromWebsiteURL(const std::string& url) {
         int width = 0, height = 0, channels = 0;
         unsigned char* pixels = stbi_load_from_memory(imageBuffer.data(), imageBuffer.size(), &width, &height, &channels, 4); // force RGBA
         if (!pixels) {
-            BrowserConsole::Log("Fetch", "Failed to decode image.");
+            BrowserConsole::GetInstance().Log("Fetch", "Failed to decode image.");
             return image;
         }
 
@@ -141,7 +141,7 @@ PImage LoadImgFromWebsiteURL(const std::string& url) {
         stbi_image_free(pixels); // Clean up pixel data
 
         if (!textureSRV) {
-            BrowserConsole::Log("Fetch", "Failed to create directX10 texture.");
+            BrowserConsole::GetInstance().Log("Fetch", "Failed to create directX10 texture.");
             return image;
         }
         image.img = textureSRV;
@@ -149,7 +149,7 @@ PImage LoadImgFromWebsiteURL(const std::string& url) {
         image.height = height;
         if (image.width == 0 || image.height == 0 || image.img == nullptr)
         {
-            BrowserConsole::Log("Fetch", "Image invalid");
+            BrowserConsole::GetInstance().Log("Fetch", "Image invalid");
         }
     }
 

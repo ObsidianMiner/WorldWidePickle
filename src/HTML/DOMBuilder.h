@@ -4,7 +4,7 @@
 struct HTMLTreeBuilder
 {
 public:
-	Node ParseNodes();
+	std::unique_ptr<Node> ParseNodes();
 	HTMLTreeBuilder(const std::string& html) : htmlContent(html) {}
 private:
 	void StartTag();
@@ -19,11 +19,11 @@ private:
 	bool inClosingTag = false;
 	bool readingAttribute = false;
 	bool readingCDATA = false;
-	std::vector<Node> rootNodes;
+	std::vector<std::unique_ptr<Node>> rootNodes;
 	Node* currentContext = nullptr;
 	Node* buildingNode = nullptr;
 	int lastStartTagPos = 0;
 	int lastEndTagPos = 0;
-	int highestID = 0;
+	int nextNodeID = 0;
 };
-Node ParseNodes(const std::string& htmlContent);
+std::unique_ptr<Node> ParseNodes(const std::string& htmlContent);

@@ -95,6 +95,6 @@ void Node::UpdateStyle(const Website& website, const std::unordered_map<std::str
                 passedDownStyle.emplace(s);
             }
         }
-        children[i].UpdateStyle(website, passedDownStyle);
+        (*children[i]).UpdateStyle(website, passedDownStyle);
     }
 }

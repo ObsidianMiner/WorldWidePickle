@@ -152,11 +152,13 @@
     <ClCompile Include="src\Browser\BrowerConsole.cpp" />
     <ClCompile Include="src\Browser\Browser.cpp" />
     <ClCompile Include="src\CSS\CSSBuilder.cpp" />
+    <ClCompile Include="src\HTML\DeubgDOMViewer.cpp" />
     <ClCompile Include="src\Layout\Hover.cpp" />
     <ClCompile Include="src\Layout\LayoutChildren.cpp" />
+    <ClCompile Include="src\Layout\LayoutSize.cpp" />
     <ClCompile Include="src\Layout\TableLayout.cpp" />
     <ClCompile Include="src\Node.cpp" />
-    <ClCompile Include="src\HTML\HTMLBuilder.cpp" />
+    <ClCompile Include="src\HTML\DOMBuilder.cpp" />
     <ClCompile Include="src\Rendering\DOMRender.cpp" />
     <ClCompile Include="src\Fetch.cpp" />
     <ClCompile Include="src\Layout\Layout.cpp" />
@@ -182,9 +184,10 @@
     <ClInclude Include="src\Browser\Browser.h" />
     <ClInclude Include="src\Browser\BrowserConsole.h" />
     <ClInclude Include="src\CSS\CSSBuilder.h" />
+    <ClInclude Include="src\HTML\DebugDOMViewer.h" />
     <ClInclude Include="src\Layout\Layout.h" />
     <ClInclude Include="src\Node.h" />
-    <ClInclude Include="src\HTML\HTMLBuilder.h" />
+    <ClInclude Include="src\HTML\DOMBuilder.h" />
     <ClInclude Include="src\Rendering\DOMRenderer.h" />
     <ClInclude Include="src\Util\Fonts.h" />
     <ClInclude Include="src\Util\ImMath.h" />

@@ -72,22 +72,22 @@ void DOMRenderer::DrawInput(Node& node)
         ImVec2 btn_pos = ImGui::GetItemRectMin();
         std::string btn_label = "Button";
         if (node.HasAttribute("value")) btn_label = node.attributes["value"];
-        if (ImGui::Button(btn_label.c_str(), btn_size))
+        if (ImGui::Button((btn_label + "##" + std::to_string(node.id)).c_str(), btn_size))
         {
             if (node.HasAttribute("onclick"))
             {
                 std::cout << "Doin an onclick: " << node.attributes["onclick"] << std::endl;
                 /*
                 std::string js = attributes["onclick"];
-                WWP::ExecuteJS(js, renderingTab);*/
+                JSEngine::ExecuteJS(js, renderingTab);*/
             }
         }
     }
     else if (node.HasAttribute("type") && node.attributes["type"] == "hidden")
     {
-
+        
     }
-    else
+    else if(node.HasAttribute("type") && node.attributes["type"] == "text")
     {
         int maxValueLength = 256;
         if (node.HasAttribute("maxlength"))
@@ -99,9 +99,9 @@ void DOMRenderer::DrawInput(Node& node)
         ImVec2 input_pos = ImGui::GetItemRectMin();
         ImGui::SetCursorScreenPos(input_pos);
         ImGui::PushItemWidth(input_size.x);
-        ImGui::InputText(std::to_string(node.id).c_str(), buffer, sizeof(buffer));
+        ImGui::InputText(("##" + std::to_string(node.id)).c_str(), buffer, sizeof(buffer));
         ImGui::PopItemWidth();
-        node.attributes["value"] = std::string(buffer);
+        static_cast<TextInputMutableState*>(renderingTab->currentPage->mutableState[node.id].get())->inputText = std::string(buffer);
     }
 }
 
@@ -115,7 +115,7 @@ inline void DOMRenderer::RenderChildren(Node& node, std::multimap<int, std::func
 {
     for (size_t i = 0; i < node.children.size(); i++)
     {
-        Render(node.children[i], queue, layer);
+        Render(*node.children[i], queue, layer);
     }
 }
 void DOMRenderer::RenderImage(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer)
@@ -149,6 +149,17 @@ void DrawDebugBox(const ImVec2& bg_min, const Node& node, const ImVec2& totalImb
         dl->AddRectFilled(bg_min, bg_max, color);
     } });
 }
+void DisplayDebugText(const char* text)
+{
+    ImVec2 textSize = ImGui::CalcTextSize(text, nullptr);
+    ImVec2 availSize = ImGui::GetContentRegionAvail();
+    ImGuiStyle style = ImGui::GetStyle();
+    float x = ImGui::GetCursorPosX() + availSize.x - textSize.x - style.WindowPadding.x;
+    float y = ImGui::GetCursorPosY() + availSize.y - textSize.y - style.WindowPadding.y;
+
+    ImGui::SetCursorPos(ImVec2(x, y));
+    ImGui::Text("%s", text);
+}
 inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::function<void(ImDrawList*)>>& queue, int layer, const ImVec2& bg_min, const ImVec2& totalImbed)
 {
     if (node.type == "img" && node.attributes.find("src") != node.attributes.end())
@@ -163,6 +174,10 @@ inline void DOMRenderer::RenderContents(Node& node, std::multimap<int, std::func
     if (node.HasAttribute("href")) ProcessLink(bg_min, node, totalImbed);
     if (node.type == "input") DrawInput(node);
 
-    if(Layout::debuggingLayout && renderingTab->hoveringNode == &node) DrawDebugBox(bg_min, node, totalImbed, queue, layer);
-    if (node.type == "div") DrawDiv(bg_min, node, totalImbed, queue, layer);
+    if (Layout::debuggingLayout && renderingTab->hoveringNode == &node)
+    {
+        DrawDebugBox(bg_min, node, totalImbed, queue, layer);
+        DisplayDebugText(PrintNode(&node, 0, 2).c_str());
+    }
+    //if (node.type == "div") DrawDiv(bg_min, node, totalImbed, queue, layer);
 }

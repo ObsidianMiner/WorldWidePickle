@@ -96,10 +96,16 @@
     <ClCompile Include="src\Layout\Hover.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\HTML\HTMLBuilder.cpp">
+    <ClCompile Include="src\HTML\DOMBuilder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Layout\TableLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layout\LayoutSize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HTML\DeubgDOMViewer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -167,13 +173,16 @@
     <ClInclude Include="src\Browser\BrowserConsole.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\HTML\HTMLBuilder.h">
+    <ClInclude Include="src\HTML\DOMBuilder.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Util\Fonts.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Libraries\include\nanosvg\nanosvg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HTML\DebugDOMViewer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

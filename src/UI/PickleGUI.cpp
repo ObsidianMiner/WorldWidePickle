@@ -63,7 +63,7 @@ PGUI::PGUI()
 
     // Create application window
     wc = { sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"World Wide Pickle", nullptr };
-    ::RegisterClassExW(&wc);
+    RegisterClassExW(&wc);
     hwnd = ::CreateWindowW(wc.lpszClassName, L"World Wide Pickle", WS_OVERLAPPEDWINDOW, 100, 100, (int)(1280 * main_scale), (int)(800 * main_scale), nullptr, nullptr, wc.hInstance, nullptr);
 
     // Initialize Direct3D
@@ -74,8 +74,8 @@ PGUI::PGUI()
     }
 
     // Show the window
-    ::ShowWindow(hwnd, SW_SHOWDEFAULT);
-    ::UpdateWindow(hwnd);
+    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    UpdateWindow(hwnd);
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -121,6 +121,7 @@ PGUI::PGUI()
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //style.FontSizeBase = 20.0f;
     defaultFont = Font("c:\\Windows\\Fonts\\segoeui.ttf", "Fonts\\Segoe UI Bold.ttf", "Fonts\\Segoe UI Italic.ttf", "Fonts\\Segoe UI Bold Italic.ttf");
+    std::cout << std::filesystem::current_path();
     io->FontDefault = defaultFont.regular;
 }
 // Helper functions

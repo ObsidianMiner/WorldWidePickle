@@ -16,6 +16,11 @@ void TopBar::RenderTopBar()
     {
         tabs.emplace_back("http://example.com");
     }
+    ImGui::SameLine();
+    if (ImGui::Button("Help"))
+    {
+        tabs.emplace_back("help.html");
+    }
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / (*PGUI::io).Framerate, (*PGUI::io).Framerate);
     ImGui::End();
