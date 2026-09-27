@@ -63,6 +63,10 @@ void BrowserConsole::BaseLog(const std::string_view source, const std::string_vi
     std::cout << colorPrefix << formatted << std::endl;
     ResetColor();
 }
+void BrowserConsole::SetVerbose(bool verbose)
+{
+    this->m_verboseMode = verbose;
+}
 void BrowserConsole::Error(const std::string_view source, const std::string_view error, bool verboseOnly)
 {
     BaseLog(source, error, error, verboseOnly);

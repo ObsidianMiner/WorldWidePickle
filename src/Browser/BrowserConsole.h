@@ -22,6 +22,8 @@ public:
 		return instance;
 	}
 
+	void SetVerbose(bool verbose);
+
 	void Error(const std::string_view source, const std::string_view error, bool verboseOnly = false);
 	void Log(const std::string_view source, const std::string_view log, bool verboseOnly = false);
 };

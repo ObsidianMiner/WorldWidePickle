@@ -121,7 +121,7 @@ void DOMRenderer::DrawInput(Node& node)
         {
             TryCastToInt(node.attributes["maxlength"], maxValueLength);
         }
-        static char buffer[256] = "";
+        static char buffer[512] = "";
         ImVec2 input_size = node.layout.contentSize;
         ImVec2 input_pos = ImGui::GetItemRectMin();
         input_pos += ImVec2(0.0f, 8.0f);

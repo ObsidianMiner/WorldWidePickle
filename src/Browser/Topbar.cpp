@@ -8,18 +8,24 @@
 #include "UI/PickleGUI.h"
 #include "Tab.h"
 #include <imgui/imgui_internal.h>
+#include "Browser.h"
 
-void TopBar::RenderTopBar()
+void TopBar::RenderTopBar(Browser& browser)
 {
     ImGui::Begin("TopBar", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiDockNodeFlags_HiddenTabBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
     if (ImGui::Button("Create New Tab"))
     {
-        tabs.emplace_back("http://html.duckduckgo.com/lite");
+        tabs.emplace_back(browser.config.configDoc["homepage"].get<std::string>().c_str());
     }
     ImGui::SameLine();
     if (ImGui::Button("Help"))
     {
         tabs.emplace_back("help.html");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Settings"))
+    {
+        browser.configOpen = !browser.configOpen;
     }
 
     ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / (*PGUI::io).Framerate, (*PGUI::io).Framerate);

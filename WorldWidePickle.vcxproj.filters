@@ -111,6 +111,9 @@
     <ClCompile Include="src\Dynamic\Forms.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Browser\BrowserConfig.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\UI\PickleGUI.h">
@@ -189,6 +192,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Dynamic\Forms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Browser\BrowserConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

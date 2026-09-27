@@ -16,11 +16,16 @@ using namespace std::string_literals;
 
 TopBar topbar;
 
+Browser::Browser()
+{
+    this->config = BrowserConfig();
+    config.LoadConfigFromWorkingDir();
+}
 
 void Browser::SetupUI()
 {
     PGUI::PGUI();
-    SetPurpleStyle();
+    ApplyStyle(config.configDoc["theme"].get<int>());
     BrowserConsole::GetInstance().Log("Browser", "Setup UI");
 }
 void Browser::LoadGlobalStyles()
@@ -33,7 +38,7 @@ void Browser::LoadGlobalStyles()
 }
 void Browser::LoadHomePage()
 {
-    tabs.emplace_back("https://html.duckduckgo.com/lite");
+    tabs.emplace_back((config.configDoc["homepage"].get<string>()).c_str());
 }
 void Browser::RenderTabs()
 {
@@ -55,7 +60,8 @@ void Browser::MainLoop()
 
         PGUI::StartFrame();
 
-        topbar.RenderTopBar();
+        topbar.RenderTopBar(*this);
+        if (configOpen) config.RenderConfig();
         RenderTabs();
 
         ImGui::End();
@@ -67,4 +73,5 @@ void Browser::Cleanup()
 {
     std::cout << "Cleaning up and exiting..." << std::endl;
     PGUI::Cleanup();
+    config.SaveConfigToWorkingDir();
 }

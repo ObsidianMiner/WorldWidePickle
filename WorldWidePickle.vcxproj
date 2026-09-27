@@ -151,6 +151,7 @@
     <ClCompile Include="Libraries\include\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Browser\BrowerConsole.cpp" />
     <ClCompile Include="src\Browser\Browser.cpp" />
+    <ClCompile Include="src\Browser\BrowserConfig.cpp" />
     <ClCompile Include="src\CSS\CSSBuilder.cpp" />
     <ClCompile Include="src\Dynamic\Forms.cpp" />
     <ClCompile Include="src\HTML\DeubgDOMViewer.cpp" />
@@ -183,6 +184,7 @@
     <ClInclude Include="Libraries\include\imgui\imstb_truetype.h" />
     <ClInclude Include="Libraries\include\nanosvg\nanosvg.h" />
     <ClInclude Include="src\Browser\Browser.h" />
+    <ClInclude Include="src\Browser\BrowserConfig.h" />
     <ClInclude Include="src\Browser\BrowserConsole.h" />
     <ClInclude Include="src\CSS\CSSBuilder.h" />
     <ClInclude Include="src\Dynamic\Forms.h" />

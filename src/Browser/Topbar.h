@@ -1,6 +1,9 @@
 #pragma once
+
+class Browser;
+
 class TopBar
 {
 public:
-	void RenderTopBar();
+	void RenderTopBar(Browser& browser);
 };
